@@ -5,9 +5,7 @@ const config: Config = {
 
   theme: {
     extend: {
-
       colors: {
-
         gray: {
           50: '#f9fafb',
           100: '#f3f4f6',
@@ -54,7 +52,6 @@ const config: Config = {
       },
 
       boxShadow: {
-
         sm: '0 1px 2px rgba(0,0,0,0.05)',
 
         DEFAULT:
@@ -65,19 +62,15 @@ const config: Config = {
       },
 
       backgroundImage: {
-
-        subtle-grid:
+        "subtle-grid":
           'linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px)',
       },
 
       animation: {
-
-        fade:
-          'fade 0.2s ease-out',
+        fade: 'fade 0.2s ease-out',
       },
 
       keyframes: {
-
         fade: {
           '0%': {
             opacity: '0',
