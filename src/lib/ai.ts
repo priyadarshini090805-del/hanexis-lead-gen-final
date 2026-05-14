@@ -1,160 +1,428 @@
-// AI Personalization Service
-// Wraps OpenAI when OPENAI_API_KEY is set; otherwise uses a high-quality mock generator.
-
-import { MessageKind } from '@prisma/client';
+import { AiTone, MessageKind, OutreachChannel } from '@prisma/client';
 
 export interface GenerateInput {
   kind: MessageKind;
+
+  channel?: OutreachChannel;
+
+  tone?: AiTone;
+
+  product?: string | null;
+
+  campaignGoal?: string | null;
+
   lead: {
     fullName: string;
+
     company?: string | null;
+
+    companyWebsite?: string | null;
+
     jobTitle?: string | null;
+
     bio?: string | null;
+
+    aiSummary?: string | null;
+
+    engagementScore?: number | null;
   };
+
   promptTemplate?: string | null;
-  tone?: 'friendly' | 'professional' | 'casual' | 'enthusiastic';
-  product?: string | null; // what you're selling/offering
 }
 
 export interface GenerateResult {
   output: string;
-  model: string;
+
   prompt: string;
+
+  model: string;
+
+  personalizationScore: number;
+
+  reasoning: string[];
 }
 
-const TONE_LABEL: Record<NonNullable<GenerateInput['tone']>, string> = {
-  friendly: 'warm and friendly',
-  professional: 'professional and concise',
-  casual: 'casual and conversational',
-  enthusiastic: 'energetic and enthusiastic',
+const toneProfiles: Record<AiTone, string> = {
+  PROFESSIONAL:
+    'Professional, concise, executive-friendly, insight-driven.',
+
+  FRIENDLY:
+    'Warm, approachable, human, conversational.',
+
+  DIRECT:
+    'Direct, clear, low fluff, action-oriented.',
+
+  CONSULTATIVE:
+    'Consultative, thoughtful, strategic, value-first.',
 };
 
-function buildPrompt(input: GenerateInput): string {
-  const tone = TONE_LABEL[input.tone ?? 'professional'];
-  const { fullName, company, jobTitle, bio } = input.lead;
-  const product = input.product?.trim() || 'our service';
+function detectLeadSignals(input: GenerateInput): string[] {
+  const signals: string[] = [];
 
-  const kindInstruction: Record<MessageKind, string> = {
+  const lead = input.lead;
+
+  if (lead.jobTitle?.toLowerCase().includes('founder')) {
+    signals.push(
+      'Founder persona detected — prioritize speed, leverage, and growth.'
+    );
+  }
+
+  if (lead.jobTitle?.toLowerCase().includes('marketing')) {
+    signals.push(
+      'Marketing persona detected — focus on conversion and engagement.'
+    );
+  }
+
+  if (lead.jobTitle?.toLowerCase().includes('sales')) {
+    signals.push(
+      'Sales persona detected — focus on pipeline efficiency.'
+    );
+  }
+
+  if (lead.bio?.toLowerCase().includes('ai')) {
+    signals.push(
+      'Lead is AI-aware — avoid generic AI buzzwords.'
+    );
+  }
+
+  if ((lead.engagementScore ?? 0) > 70) {
+    signals.push(
+      'High engagement lead — outreach can be more direct.'
+    );
+  }
+
+  return signals;
+}
+
+function calculatePersonalizationScore(
+  input: GenerateInput
+): number {
+  let score = 40;
+
+  if (input.lead.company) score += 10;
+
+  if (input.lead.jobTitle) score += 15;
+
+  if (input.lead.bio) score += 20;
+
+  if (input.lead.aiSummary) score += 10;
+
+  if (input.promptTemplate) score += 5;
+
+  return Math.min(score, 100);
+}
+
+function buildPrompt(input: GenerateInput): {
+  prompt: string;
+
+  reasoning: string[];
+} {
+  const tone =
+    toneProfiles[input.tone ?? 'PROFESSIONAL'];
+
+  const personalizationSignals =
+    detectLeadSignals(input);
+
+  const lead = input.lead;
+
+  const firstName =
+    lead.fullName.split(' ')[0] || 'there';
+
+  const channel =
+    input.channel ?? 'EMAIL';
+
+  const product =
+    input.product ??
+    'an AI-powered outreach workflow platform';
+
+  const campaignGoal =
+    input.campaignGoal ??
+    'start a meaningful business conversation';
+
+  const instructions: Record<MessageKind, string> = {
     CONNECTION:
-      'Write a short LinkedIn connection request (max 280 characters). Reference one specific detail about their role or company. Do not pitch anything.',
+      `
+Write a highly personalized connection request.
+
+Constraints:
+- under 280 characters
+- reference one believable contextual detail
+- avoid sounding automated
+- avoid corporate buzzwords
+- no hard selling
+      `,
+
     FOLLOW_UP:
-      'Write a polite follow-up message (4–6 sentences). Reference our previous outreach, add one new piece of value, and end with a low-friction CTA.',
+      `
+Write a smart follow-up message.
+
+Constraints:
+- acknowledge previous touch naturally
+- introduce one new insight
+- avoid sounding pushy
+- conversational pacing
+- end with low-friction CTA
+      `,
+
     SALES_PITCH:
-      `Write a personalized sales message about ${product} (5–8 sentences). Open with a relevant observation about their company or role, articulate one clear benefit, and close with a soft meeting CTA.`,
-    CUSTOM: 'Write the requested message using the provided template.',
+      `
+Write a strategic outbound sales message.
+
+Requirements:
+- identify likely operational pain point
+- connect product to business outcome
+- use concise persuasion
+- avoid sounding spammy
+- CTA should feel consultative, not aggressive
+      `,
+
+    RE_ENGAGEMENT:
+      `
+Write a re-engagement message for a cold lead.
+
+Requirements:
+- lightweight tone
+- curiosity-driven
+- acknowledge timing/context
+- no guilt language
+      `,
+
+    CUSTOM:
+      `
+Follow the custom instructions provided by the user.
+      `,
   };
 
-  const tpl =
-    input.promptTemplate?.trim() ||
-    [
-      `You are a senior sales copywriter. Tone: ${tone}.`,
-      `Recipient: ${fullName}${jobTitle ? `, ${jobTitle}` : ''}${company ? ` at ${company}` : ''}.`,
-      bio ? `About them: ${bio}` : '',
-      kindInstruction[input.kind],
-      'Avoid generic phrases like "I hope this finds you well". Make it sound human.',
-    ]
-      .filter(Boolean)
-      .join('\n');
+  const systemContext = `
+You are Hanexis AI.
 
-  return tpl;
+You generate elite-level outbound outreach messages for modern sales and growth teams.
+
+Your outputs should:
+- feel human-written
+- avoid robotic phrasing
+- avoid exaggerated hype
+- sound context-aware
+- optimize for response rate
+- balance brevity with personalization
+
+Tone profile:
+${tone}
+
+Campaign goal:
+${campaignGoal}
+
+Target channel:
+${channel}
+
+Lead details:
+Name: ${lead.fullName}
+Role: ${lead.jobTitle ?? 'Unknown'}
+Company: ${lead.company ?? 'Unknown'}
+Bio: ${lead.bio ?? 'Unavailable'}
+
+Lead intelligence:
+${personalizationSignals.join('\n')}
+
+Offer/Product:
+${product}
+
+Task:
+${instructions[input.kind]}
+  `;
+
+  const finalPrompt =
+    input.promptTemplate?.trim() || systemContext;
+
+  return {
+    prompt: finalPrompt,
+
+    reasoning: personalizationSignals,
+  };
 }
 
-// ===== Real OpenAI call =====
-async function callOpenAI(prompt: string): Promise<string> {
+async function callOpenAI(
+  prompt: string
+): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY!;
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You write personalized social-media outreach messages.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 400,
-    }),
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`OpenAI error ${res.status}: ${errText}`);
+
+  const response = await fetch(
+    'https://api.openai.com/v1/chat/completions',
+    {
+      method: 'POST',
+
+      headers: {
+        'Content-Type': 'application/json',
+
+        Authorization: `Bearer ${apiKey}`,
+      },
+
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+
+        temperature: 0.8,
+
+        max_tokens: 450,
+
+        messages: [
+          {
+            role: 'system',
+
+            content:
+              'You are an elite outbound strategist.',
+          },
+
+          {
+            role: 'user',
+
+            content: prompt,
+          },
+        ],
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `OpenAI request failed: ${response.status}`
+    );
   }
-  const json = await res.json();
-  return json.choices?.[0]?.message?.content?.trim() ?? '';
+
+  const data = await response.json();
+
+  return (
+    data.choices?.[0]?.message?.content?.trim() ?? ''
+  );
 }
 
-// ===== Mock generator (high quality) =====
-function mockGenerate(input: GenerateInput): string {
-  const { fullName, company, jobTitle, bio } = input.lead;
-  const first = fullName.split(' ')[0] || 'there';
-  const co = company || 'your company';
-  const role = jobTitle || 'your role';
-  const hint = bio ? bio.split('.')[0] : `the work you're doing at ${co}`;
-  const product = input.product?.trim() || 'a tool that helps sales teams personalize outreach at scale';
+function fallbackGenerator(
+  input: GenerateInput
+): string {
+  const firstName =
+    input.lead.fullName.split(' ')[0];
+
+  const company =
+    input.lead.company ?? 'your company';
+
+  const role =
+    input.lead.jobTitle ?? 'your role';
 
   switch (input.kind) {
     case 'CONNECTION':
-      return `Hi ${first} — came across your profile after reading about ${co}. The way you're approaching ${role.toLowerCase()} caught my eye, particularly ${hint.toLowerCase()}. Would love to connect and follow your work.`;
+      return `
+Hi ${firstName} — came across your work at ${company} and really liked your perspective around ${role.toLowerCase()}.
+
+Would love to connect and follow what you're building.
+      `.trim();
 
     case 'FOLLOW_UP':
-      return `Hi ${first},\n\nWanted to circle back on my note from last week. Since then I've been thinking about how teams like yours at ${co} usually handle outbound personalization — most of the people I talk to in ${role.toLowerCase()} say the same thing: it's the part that doesn't scale.\n\nWe just shipped a feature that auto-tailors the first three touches off a single LinkedIn URL. Happy to send a 90-second Loom — only if useful, no pressure either way.\n\n— Best`;
+      return `
+Hi ${firstName},
+
+Wanted to briefly follow up on my earlier message.
+
+A lot of teams in ${role.toLowerCase()} are currently struggling with personalization at scale, so I thought this might actually be relevant for your workflow.
+
+Happy to share a few ideas if useful.
+      `.trim();
 
     case 'SALES_PITCH':
-      return `Hi ${first},\n\nQuick note — your post on ${hint.toLowerCase()} resonated, especially the bit about pipeline being a quality problem more than a volume one. That's exactly the gap we built ${product} for.\n\nIn short: we help ${role.toLowerCase()}s like yours at ${co} cut research time per lead from 12 minutes to under 60 seconds, with messages that actually sound like you wrote them. One ${role.toLowerCase()} in our beta booked 14 meetings off her first 200-lead batch.\n\nOpen to a 15-min call next Tuesday or Thursday? Happy to share the playbook even if we never work together.\n\n— Cheers`;
+      return `
+Hi ${firstName},
 
-    case 'CUSTOM':
+We built Hanexis to help growth and outbound teams reduce manual prospecting work while increasing personalization quality.
+
+Teams using similar workflows are seeing significantly faster lead research and better response quality.
+
+Open to a quick conversation next week?
+      `.trim();
+
     default:
-      return `Hi ${first}, just a quick message about ${product}. Let me know if you'd like to learn more about how we could help at ${co}.`;
+      return `
+Hi ${firstName},
+
+Just wanted to reach out and start a conversation around potential collaboration opportunities.
+      `.trim();
   }
 }
 
-export async function generateMessage(input: GenerateInput): Promise<GenerateResult> {
-  const prompt = buildPrompt(input);
+export async function generateMessage(
+  input: GenerateInput
+): Promise<GenerateResult> {
+  const { prompt, reasoning } =
+    buildPrompt(input);
+
+  const personalizationScore =
+    calculatePersonalizationScore(input);
+
   if (process.env.OPENAI_API_KEY) {
     try {
-      const output = await callOpenAI(prompt);
-      return { output, prompt, model: 'gpt-4o-mini' };
-    } catch (e) {
-      console.error('OpenAI failed, falling back to mock:', e);
-      return { output: mockGenerate(input), prompt, model: 'mock-gpt (fallback)' };
+      const output =
+        await callOpenAI(prompt);
+
+      return {
+        output,
+
+        prompt,
+
+        reasoning,
+
+        personalizationScore,
+
+        model: 'hanexis-ai-v2',
+      };
+    } catch (error) {
+      console.error(
+        'AI provider failed. Falling back locally.',
+        error
+      );
     }
   }
-  return { output: mockGenerate(input), prompt, model: 'mock-gpt' };
+
+  return {
+    output: fallbackGenerator(input),
+
+    prompt,
+
+    reasoning,
+
+    personalizationScore,
+
+    model: 'hanexis-local-fallback',
+  };
 }
 
-// Seed prompts shipped with the app
-export const SEED_PROMPTS: Array<{ name: string; kind: MessageKind; body: string }> = [
+export const SEED_PROMPTS = [
   {
-    name: 'Friendly first touch',
+    name: 'Founder-first outreach',
+
     kind: 'CONNECTION',
-    body: 'Tone: warm but professional. Reference one specific detail from their profile. Never pitch. Max 280 chars.',
+
+    tone: 'CONSULTATIVE',
+
+    body:
+      'Focus on leverage, growth bottlenecks, and operational efficiency.',
   },
+
   {
-    name: 'Mutual-interest connect',
-    kind: 'CONNECTION',
-    body: 'Open with shared interest or industry observation. Avoid "saw you on LinkedIn". Keep under 280 chars.',
-  },
-  {
-    name: 'Soft follow-up (value add)',
+    name: 'Consultative follow-up',
+
     kind: 'FOLLOW_UP',
-    body: 'Reference previous touch in one line. Add one new piece of value (insight, article, stat). End with low-friction CTA.',
+
+    tone: 'PROFESSIONAL',
+
+    body:
+      'Avoid pressure. Introduce one useful insight naturally.',
   },
+
   {
-    name: 'Breakup follow-up',
-    kind: 'FOLLOW_UP',
-    body: 'Polite final follow-up. Acknowledge they might not be a fit right now. Keep door open. 3–4 sentences.',
-  },
-  {
-    name: 'Problem-first sales pitch',
+    name: 'Strategic outbound pitch',
+
     kind: 'SALES_PITCH',
-    body: 'Open with the specific problem their role typically faces. Quantify the impact. One sentence on solution. CTA for short call.',
-  },
-  {
-    name: 'Case-study sales pitch',
-    kind: 'SALES_PITCH',
-    body: 'Lead with a similar customer outcome (anonymized). Tie it to their likely goal. Offer to share the case study.',
+
+    tone: 'DIRECT',
+
+    body:
+      'Lead with measurable business value and operational outcomes.',
   },
 ];
