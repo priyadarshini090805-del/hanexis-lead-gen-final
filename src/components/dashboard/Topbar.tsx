@@ -10,11 +10,8 @@ import {
   Bell,
   ChevronDown,
   LogOut,
-  Sparkles,
-  Shield,
   Search,
   Command,
-  Activity,
 } from 'lucide-react';
 
 import { initials } from '@/lib/utils';
@@ -61,69 +58,49 @@ export function Topbar({
       className="
         sticky top-0 z-40
         border-b border-neutral-200
-        bg-white/85
+        bg-white/90
         backdrop-blur-xl
       "
     >
       <div
         className="
-          flex h-[74px]
+          flex h-[76px]
           items-center justify-between
-          gap-6 px-5
-          sm:px-8
+          gap-6 px-6
+          lg:px-10
         "
       >
 
-        {/* Left Section */}
+        {/* Left */}
 
         <div
           className="
             flex min-w-0
-            items-center gap-6
+            items-center gap-8
           "
         >
 
-          {/* Workspace Heading */}
+          {/* Greeting */}
 
           <div className="min-w-0">
 
             <div
               className="
-                flex items-center gap-2
+                text-xs
+                font-medium
+                uppercase
+                tracking-[0.16em]
+                text-neutral-400
               "
             >
-              <div
-                className="
-                  flex h-7 w-7
-                  items-center justify-center
-                  rounded-lg
-                  bg-neutral-100
-                "
-              >
-                <Sparkles
-                  className="
-                    h-3.5 w-3.5
-                    text-neutral-700
-                  "
-                />
-              </div>
-
-              <span
-                className="
-                  text-xs font-medium
-                  uppercase
-                  tracking-[0.18em]
-                  text-neutral-500
-                "
-              >
-                AI Workspace
-              </span>
+              Workspace
             </div>
 
             <h1
               className="
                 mt-1 truncate
-                text-lg font-semibold
+                text-[26px]
+                font-semibold
                 tracking-tight
                 text-neutral-900
               "
@@ -137,19 +114,20 @@ export function Topbar({
 
           <div
             className="
-              hidden lg:flex
+              hidden xl:flex
               items-center
             "
           >
             <button
               className="
-                flex h-11 w-[320px]
+                flex h-12 w-[360px]
                 items-center justify-between
                 rounded-2xl border
                 border-neutral-200
-                bg-neutral-50/80
-                px-4 transition
+                bg-neutral-50
+                px-4 transition-all
                 hover:bg-white
+                hover:shadow-sm
               "
             >
               <div
@@ -170,8 +148,7 @@ export function Topbar({
                     text-neutral-500
                   "
                 >
-                  Search leads, outreach,
-                  templates...
+                  Search leads, templates...
                 </span>
               </div>
 
@@ -191,7 +168,7 @@ export function Topbar({
           </div>
         </div>
 
-        {/* Right Section */}
+        {/* Right */}
 
         <div
           className="
@@ -199,57 +176,7 @@ export function Topbar({
           "
         >
 
-          {/* AI Status */}
-
-          <div
-            className="
-              hidden xl:flex
-              items-center gap-3
-              rounded-2xl border
-              border-neutral-200
-              bg-neutral-50
-              px-4 py-2.5
-            "
-          >
-            <div
-              className="
-                flex h-9 w-9
-                items-center justify-center
-                rounded-xl
-                bg-emerald-100
-              "
-            >
-              <Activity
-                className="
-                  h-4 w-4
-                  text-emerald-700
-                "
-              />
-            </div>
-
-            <div>
-
-              <div
-                className="
-                  text-xs
-                  text-neutral-500
-                "
-              >
-                AI Processing
-              </div>
-
-              <div
-                className="
-                  text-sm font-medium
-                  text-neutral-900
-                "
-              >
-                Systems Healthy
-              </div>
-            </div>
-          </div>
-
-          {/* Notifications */}
+          {/* Notification */}
 
           <button
             className="
@@ -259,6 +186,7 @@ export function Topbar({
               border-neutral-200
               bg-white transition
               hover:bg-neutral-50
+              hover:shadow-sm
             "
           >
             <Bell
@@ -294,8 +222,9 @@ export function Topbar({
                 gap-3 rounded-2xl
                 border border-neutral-200
                 bg-white px-3 py-2
-                transition
+                transition-all
                 hover:bg-neutral-50
+                hover:shadow-sm
               "
             >
               {/* Avatar */}
@@ -307,7 +236,7 @@ export function Topbar({
                   alt={name}
                   className="
                     h-10 w-10
-                    rounded-xl
+                    rounded-2xl
                     object-cover
                   "
                 />
@@ -316,7 +245,7 @@ export function Topbar({
                   className="
                     flex h-10 w-10
                     items-center justify-center
-                    rounded-xl
+                    rounded-2xl
                     bg-neutral-900
                     text-sm font-semibold
                     text-white
@@ -326,7 +255,7 @@ export function Topbar({
                 </div>
               )}
 
-              {/* Identity */}
+              {/* Info */}
 
               <div
                 className="
@@ -388,7 +317,7 @@ export function Topbar({
                   }}
                   className="
                     absolute right-0 mt-3
-                    w-[320px]
+                    w-[300px]
                     overflow-hidden
                     rounded-3xl border
                     border-neutral-200
@@ -465,17 +394,15 @@ export function Topbar({
                         <div
                           className="
                             mt-3 inline-flex
-                            items-center gap-2
+                            items-center
                             rounded-full
-                            border border-neutral-200
-                            bg-neutral-50
+                            bg-neutral-100
                             px-3 py-1.5
-                            text-xs font-medium
+                            text-xs
+                            font-medium
                             text-neutral-700
                           "
                         >
-                          <Shield className="h-3 w-3" />
-
                           {role === 'ADMIN'
                             ? 'Admin Access'
                             : 'Standard Access'}
@@ -484,72 +411,7 @@ export function Topbar({
                     </div>
                   </div>
 
-                  {/* Workspace Stats */}
-
-                  <div
-                    className="
-                      grid grid-cols-2
-                      gap-3 border-b
-                      border-neutral-200
-                      p-5
-                    "
-                  >
-                    <div
-                      className="
-                        rounded-2xl
-                        bg-neutral-50
-                        p-4
-                      "
-                    >
-                      <div
-                        className="
-                          text-xs
-                          text-neutral-500
-                        "
-                      >
-                        Workspace
-                      </div>
-
-                      <div
-                        className="
-                          mt-1 text-sm
-                          font-medium
-                          text-neutral-900
-                        "
-                      >
-                        Hanexis AI
-                      </div>
-                    </div>
-
-                    <div
-                      className="
-                        rounded-2xl
-                        bg-neutral-50
-                        p-4
-                      "
-                    >
-                      <div
-                        className="
-                          text-xs
-                          text-neutral-500
-                        "
-                      >
-                        Environment
-                      </div>
-
-                      <div
-                        className="
-                          mt-1 text-sm
-                          font-medium
-                          text-emerald-700
-                        "
-                      >
-                        Stable
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
+                  {/* Footer */}
 
                   <div className="p-3">
 

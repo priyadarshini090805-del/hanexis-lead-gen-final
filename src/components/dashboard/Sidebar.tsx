@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-
 import { usePathname } from 'next/navigation';
 
 import {
@@ -12,9 +11,6 @@ import {
   Plug,
   Settings,
   Shield,
-  ChevronRight,
-  Activity,
-  BrainCircuit,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -22,67 +18,37 @@ import { cn } from '@/lib/utils';
 const navigation = [
   {
     href: '/dashboard',
-
     label: 'Overview',
-
-    description:
-      'Workspace analytics and pipeline insights',
-
     icon: LayoutDashboard,
   },
 
   {
     href: '/dashboard/leads',
-
-    label: 'Lead Intelligence',
-
-    description:
-      'Manage qualification and engagement workflows',
-
+    label: 'Leads',
     icon: Users,
   },
 
   {
     href: '/dashboard/ai-messages',
-
-    label: 'AI Outreach',
-
-    description:
-      'Generate personalized outbound campaigns',
-
+    label: 'Outreach',
     icon: Sparkles,
   },
 
   {
     href: '/dashboard/prompts',
-
-    label: 'Prompt Studio',
-
-    description:
-      'Reusable AI communication strategies',
-
-    icon: BrainCircuit,
+    label: 'Templates',
+    icon: MessageSquareText,
   },
 
   {
     href: '/dashboard/integrations',
-
     label: 'Integrations',
-
-    description:
-      'Connect external workflow systems',
-
     icon: Plug,
   },
 
   {
     href: '/dashboard/settings',
-
-    label: 'Workspace Settings',
-
-    description:
-      'Manage account and workspace configuration',
-
+    label: 'Settings',
     icon: Settings,
   },
 ];
@@ -92,32 +58,28 @@ export function Sidebar({
 }: {
   role: 'ADMIN' | 'USER';
 }) {
-  const pathname =
-    usePathname();
+  const pathname = usePathname();
 
   return (
     <aside
       className="
         sticky top-0 hidden
-        h-screen w-[290px]
+        h-screen w-[270px]
         shrink-0
         border-r border-neutral-200
-        bg-white/95
-        backdrop-blur-xl
+        bg-[#fafafa]
         lg:flex
       "
     >
       <div className="flex h-full w-full flex-col">
 
-        {/* Header */}
+        {/* Logo */}
 
-        <div className="border-b border-neutral-200 px-6 py-6">
+        <div className="px-6 pt-7 pb-6">
 
           <Link
             href="/dashboard"
-            className="
-              group flex items-center gap-4
-            "
+            className="flex items-center gap-3"
           >
             <div
               className="
@@ -125,23 +87,18 @@ export function Sidebar({
                 items-center justify-center
                 rounded-2xl
                 border border-neutral-200
-                bg-neutral-50
-                transition
-                group-hover:scale-105
+                bg-white
+                shadow-sm
               "
             >
-              <Sparkles
-                className="
-                  h-5 w-5
-                  text-neutral-700
-                "
-              />
+              <Sparkles className="h-5 w-5 text-neutral-700" />
             </div>
 
             <div>
               <div
                 className="
-                  text-base font-semibold
+                  text-[17px]
+                  font-semibold
                   tracking-tight
                   text-neutral-900
                 "
@@ -151,239 +108,91 @@ export function Sidebar({
 
               <div
                 className="
-                  mt-0.5 text-xs
+                  text-xs
                   text-neutral-500
                 "
               >
-                AI Sales Intelligence Workspace
+                Sales Workspace
               </div>
             </div>
           </Link>
         </div>
 
-        {/* Workspace Status */}
-
-        <div className="px-5 pt-5">
-
-          <div
-            className="
-              rounded-2xl border
-              border-neutral-200
-              bg-neutral-50/80
-              p-4
-            "
-          >
-            <div
-              className="
-                flex items-center
-                justify-between
-              "
-            >
-              <div>
-                <div
-                  className="
-                    text-xs uppercase
-                    tracking-wide
-                    text-neutral-500
-                  "
-                >
-                  Workspace Health
-                </div>
-
-                <div
-                  className="
-                    mt-1 text-sm
-                    font-medium
-                    text-neutral-900
-                  "
-                >
-                  Operational
-                </div>
-              </div>
-
-              <div
-                className="
-                  flex h-9 w-9
-                  items-center justify-center
-                  rounded-xl
-                  bg-emerald-100
-                "
-              >
-                <Activity
-                  className="
-                    h-4 w-4
-                    text-emerald-600
-                  "
-                />
-              </div>
-            </div>
-
-            <div
-              className="
-                mt-4 flex items-center
-                gap-2 text-xs
-                text-neutral-500
-              "
-            >
-              <div
-                className="
-                  h-2 w-2 rounded-full
-                  bg-emerald-500
-                "
-              />
-
-              AI systems healthy
-            </div>
-          </div>
-        </div>
-
         {/* Navigation */}
 
-        <nav
-          className="
-            flex-1 overflow-y-auto
-            px-4 py-6
-          "
-        >
+        <nav className="flex-1 px-4">
+
           <div
             className="
               mb-3 px-3
               text-[11px]
               font-semibold
               uppercase
-              tracking-[0.16em]
+              tracking-[0.14em]
               text-neutral-400
             "
           >
-            Workspace Navigation
+            Workspace
           </div>
 
           <div className="space-y-1.5">
 
-            {navigation.map(
-              (item) => {
-                const active =
-                  pathname ===
-                    item.href ||
-                  (item.href !==
-                    '/dashboard' &&
-                    pathname.startsWith(
-                      item.href
-                    ));
+            {navigation.map((item) => {
+              const active =
+                pathname === item.href ||
+                (
+                  item.href !== '/dashboard' &&
+                  pathname.startsWith(item.href)
+                );
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    `
+                      group flex items-center
+                      gap-3 rounded-2xl
+                      px-4 py-3
+                      transition-all duration-200
+                    `,
+
+                    active
+                      ? `
+                        bg-neutral-900
+                        text-white
+                        shadow-lg
+                      `
+                      : `
+                        text-neutral-700
+                        hover:bg-white
+                        hover:shadow-sm
+                      `
+                  )}
+                >
+                  <div
                     className={cn(
                       `
-                        group relative flex
-                        items-start gap-4
-                        rounded-2xl
-                        border px-4 py-4
-                        transition-all duration-200
+                        flex h-10 w-10
+                        items-center justify-center
+                        rounded-xl
+                        transition
                       `,
 
                       active
                         ? `
-                          border-neutral-900
-                          bg-neutral-900
-                          text-white
-                          shadow-lg
+                          bg-white/10
                         `
                         : `
-                          border-transparent
-                          text-neutral-700
-                          hover:border-neutral-200
-                          hover:bg-neutral-50
+                          bg-neutral-100
+                          group-hover:bg-neutral-200
                         `
                     )}
                   >
-                    <div
+                    <item.icon
                       className={cn(
                         `
-                          mt-0.5 flex
-                          h-10 w-10 shrink-0
-                          items-center justify-center
-                          rounded-xl
-                          transition
-                        `,
-
-                        active
-                          ? `
-                            bg-white/10
-                          `
-                          : `
-                            bg-neutral-100
-                            group-hover:bg-white
-                          `
-                      )}
-                    >
-                      <item.icon
-                        className={cn(
-                          `
-                            h-5 w-5
-                          `,
-
-                          active
-                            ? `
-                              text-white
-                            `
-                            : `
-                              text-neutral-700
-                            `
-                        )}
-                      />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-
-                      <div
-                        className={cn(
-                          `
-                            text-sm
-                            font-medium
-                          `,
-
-                          active
-                            ? `
-                              text-white
-                            `
-                            : `
-                              text-neutral-900
-                            `
-                        )}
-                      >
-                        {item.label}
-                      </div>
-
-                      <div
-                        className={cn(
-                          `
-                            mt-1 text-xs
-                            leading-5
-                          `,
-
-                          active
-                            ? `
-                              text-neutral-300
-                            `
-                            : `
-                              text-neutral-500
-                            `
-                        )}
-                      >
-                        {
-                          item.description
-                        }
-                      </div>
-                    </div>
-
-                    <ChevronRight
-                      className={cn(
-                        `
-                          mt-1 h-4 w-4
-                          transition
+                          h-4.5 w-4.5
                         `,
 
                         active
@@ -391,35 +200,38 @@ export function Sidebar({
                             text-white
                           `
                           : `
-                            text-neutral-400
-                            opacity-0
-                            group-hover:opacity-100
+                            text-neutral-700
                           `
                       )}
                     />
-                  </Link>
-                );
-              }
-            )}
+                  </div>
+
+                  <div
+                    className={cn(
+                      `
+                        text-sm font-medium
+                      `,
+
+                      active
+                        ? `
+                          text-white
+                        `
+                        : `
+                          text-neutral-800
+                        `
+                    )}
+                  >
+                    {item.label}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
-          {/* Admin Controls */}
+          {/* Admin */}
 
           {role === 'ADMIN' && (
             <div className="mt-8">
-
-              <div
-                className="
-                  mb-3 px-3
-                  text-[11px]
-                  font-semibold
-                  uppercase
-                  tracking-[0.16em]
-                  text-neutral-400
-                "
-              >
-                Administrative Access
-              </div>
 
               <div
                 className="
@@ -456,7 +268,7 @@ export function Sidebar({
                         text-amber-900
                       "
                     >
-                      Admin Workspace
+                      Admin Access
                     </div>
 
                     <p
@@ -466,10 +278,7 @@ export function Sidebar({
                         text-amber-700
                       "
                     >
-                      Organization-level controls,
-                      analytics visibility,
-                      and operational permissions
-                      are enabled.
+                      Workspace management permissions enabled.
                     </p>
                   </div>
                 </div>
@@ -493,13 +302,14 @@ export function Sidebar({
             "
           >
             <div>
+
               <div
                 className="
                   text-xs
                   text-neutral-500
                 "
               >
-                Platform Status
+                Environment
               </div>
 
               <div
@@ -509,7 +319,7 @@ export function Sidebar({
                   text-neutral-900
                 "
               >
-                Stable Environment
+                Production
               </div>
             </div>
 
@@ -517,10 +327,11 @@ export function Sidebar({
               className="
                 flex items-center
                 gap-2 rounded-full
-                border border-neutral-200
+                bg-white
                 px-3 py-1.5
                 text-xs
                 text-neutral-600
+                shadow-sm
               "
             >
               <div

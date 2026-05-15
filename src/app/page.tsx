@@ -75,7 +75,7 @@ export default function LandingPage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blush-500 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-blush-500" />
             </span>
-            AI-driven outreach, now with feeling
+            
           </div>
           <h1 className="text-5xl font-bold tracking-tight text-blush-900 sm:text-7xl">
             Turn social profiles into
@@ -141,7 +141,7 @@ export default function LandingPage() {
       <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
         <div className="text-center">
           <h2 className="text-4xl font-bold text-blush-900 sm:text-5xl">
-            Everything in <span className="text-gradient">one pink dashboard.</span>
+            Everything in <span className="text-gradient">one dashboard.</span>
           </h2>
           <p className="mt-4 text-blush-700">
             Three modules. One workflow. From cold profile to warm reply.

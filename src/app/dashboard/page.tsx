@@ -8,14 +8,10 @@ import { prisma } from '@/lib/prisma';
 
 import {
   ArrowRight,
-  BrainCircuit,
   MessageSquare,
-  Sparkles,
   TrendingUp,
   Users,
-  Activity,
-  Clock3,
-  Target,
+  Sparkles,
 } from 'lucide-react';
 
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
@@ -23,17 +19,6 @@ import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
 import { timeAgo } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
-
-function calculateGrowth(current: number) {
-  const simulatedPrevious =
-    Math.max(current - Math.floor(current * 0.22), 1);
-
-  return Math.round(
-    ((current - simulatedPrevious) /
-      simulatedPrevious) *
-      100
-  );
-}
 
 export default async function DashboardOverview() {
   const session =
@@ -44,17 +29,9 @@ export default async function DashboardOverview() {
 
   const [
     totalLeads,
-
     totalMessages,
-
-    totalQualified,
-
-    avgLeadScore,
-
     recentLeads,
-
     recentMessages,
-
     byStatus,
   ] = await Promise.all([
     prisma.lead.count({
@@ -69,24 +46,6 @@ export default async function DashboardOverview() {
       },
     }),
 
-    prisma.lead.count({
-      where: {
-        ownerId: userId,
-
-        isQualified: true,
-      },
-    }),
-
-    prisma.lead.aggregate({
-      where: {
-        ownerId: userId,
-      },
-
-      _avg: {
-        score: true,
-      },
-    }),
-
     prisma.lead.findMany({
       where: {
         ownerId: userId,
@@ -96,7 +55,7 @@ export default async function DashboardOverview() {
         createdAt: 'desc',
       },
 
-      take: 6,
+      take: 5,
 
       include: {
         tags: true,
@@ -118,7 +77,6 @@ export default async function DashboardOverview() {
         lead: {
           select: {
             fullName: true,
-
             company: true,
           },
         },
@@ -138,488 +96,222 @@ export default async function DashboardOverview() {
     }),
   ]);
 
-  const getStatusCount = (
-    status: string
-  ) =>
-    byStatus.find(
-      (item) =>
-        item.status ===
-        (status as any)
-    )?._count.status ?? 0;
-
-  const converted =
-    getStatusCount(
-      'CONVERTED'
-    );
-
-  const contacted =
-    getStatusCount(
-      'CONTACTED'
-    );
-
-  const responded =
-    getStatusCount(
-      'RESPONDED'
-    );
-
-  const conversionRate =
-    totalLeads > 0
-      ? Math.round(
-          (converted /
-            totalLeads) *
-            100
-        )
-      : 0;
-
-  const replyRate =
-    contacted + responded > 0
-      ? Math.round(
-          (responded /
-            (contacted +
-              responded)) *
-            100
-        )
-      : 0;
-
-  const avgScore =
-    Math.round(
-      avgLeadScore._avg
-        .score ?? 0
-    );
-
-  const metrics = [
-    {
-      title: 'Lead Intelligence',
-
-      value: totalLeads,
-
-      growth:
-        calculateGrowth(
-          totalLeads
-        ),
-
-      icon: Users,
-
-      description:
-        'Active leads tracked across outreach pipelines',
-    },
-
-    {
-      title: 'AI Outreach',
-
-      value: totalMessages,
-
-      growth:
-        calculateGrowth(
-          totalMessages
-        ),
-
-      icon: Sparkles,
-
-      description:
-        'AI-generated outbound communication workflows',
-    },
-
-    {
-      title: 'Reply Rate',
-
-      value: `${replyRate}%`,
-
-      growth: 12,
-
-      icon: TrendingUp,
-
-      description:
-        'Engagement efficiency across contacted leads',
-    },
-
-    {
-      title: 'Lead Quality',
-
-      value: `${avgScore}/100`,
-
-      growth: 8,
-
-      icon: BrainCircuit,
-
-      description:
-        'Average qualification and engagement score',
-    },
-  ];
-
   return (
-    <div
-      className="
-        min-h-screen
-        bg-neutral-50
-      "
-    >
-      <div
+    <div className="space-y-8">
+
+      {/* Hero */}
+
+      <section
         className="
-          space-y-8 p-5
-          sm:p-8
+          overflow-hidden
+          rounded-[32px]
+          border border-neutral-200
+          bg-white
         "
       >
-
-        {/* Hero */}
-
-        <section
+        <div
           className="
-            overflow-hidden
-            rounded-[32px]
-            border border-neutral-200
-            bg-white
+            px-8 py-10
+            lg:px-12 lg:py-12
           "
         >
+
           <div
             className="
-              relative px-8 py-8
-              lg:px-10 lg:py-10
+              max-w-3xl
             "
           >
 
             <div
               className="
-                absolute inset-0
-                bg-[radial-gradient(circle_at_top_right,rgba(0,0,0,0.04),transparent_35%)]
+                inline-flex items-center
+                gap-2 rounded-full
+                bg-neutral-100
+                px-4 py-2
+                text-xs font-medium
+                uppercase tracking-[0.18em]
+                text-neutral-600
               "
-            />
+            >
+              Hanexis Workspace
+            </div>
+
+            <h1
+              className="
+                mt-6 text-5xl
+                font-semibold
+                tracking-tight
+                text-neutral-950
+              "
+            >
+              Manage leads,
+              outreach,
+              and conversations
+              from one place.
+            </h1>
+
+            <p
+              className="
+                mt-5 max-w-2xl
+                text-base leading-8
+                text-neutral-600
+              "
+            >
+              Track prospects,
+              organize outreach,
+              generate personalized
+              messages,
+              and monitor pipeline activity
+              across your sales workflow.
+            </p>
 
             <div
               className="
-                relative flex
-                flex-col gap-8
-                lg:flex-row
-                lg:items-center
-                lg:justify-between
+                mt-8 flex flex-wrap
+                gap-3
               "
             >
 
-              <div className="max-w-2xl">
-
-                <div
-                  className="
-                    inline-flex items-center
-                    gap-2 rounded-full
-                    border border-neutral-200
-                    bg-neutral-100
-                    px-4 py-2
-                    text-xs font-medium
-                    uppercase tracking-[0.18em]
-                    text-neutral-600
-                  "
-                >
-                  <Activity className="h-3.5 w-3.5" />
-
-                  AI Sales Intelligence
-                </div>
-
-                <h1
-                  className="
-                    mt-5 text-4xl
-                    font-semibold
-                    tracking-tight
-                    text-neutral-950
-                  "
-                >
-                  Revenue operations,
-                  powered by contextual AI.
-                </h1>
-
-                <p
-                  className="
-                    mt-4 max-w-xl
-                    text-base leading-8
-                    text-neutral-600
-                  "
-                >
-                  Monitor lead qualification,
-                  outreach engagement,
-                  AI-generated communication,
-                  and pipeline efficiency from a
-                  unified intelligence workspace.
-                </p>
-
-                <div
-                  className="
-                    mt-8 flex flex-wrap
-                    gap-3
-                  "
-                >
-                  <Link
-                    href="/dashboard/ai-messages"
-                    className="
-                      inline-flex items-center
-                      gap-2 rounded-2xl
-                      bg-neutral-950
-                      px-5 py-3
-                      text-sm font-medium
-                      text-white transition
-                      hover:bg-black
-                    "
-                  >
-                    <Sparkles className="h-4 w-4" />
-
-                    Generate Outreach
-                  </Link>
-
-                  <Link
-                    href="/dashboard/leads"
-                    className="
-                      inline-flex items-center
-                      gap-2 rounded-2xl
-                      border border-neutral-200
-                      bg-white px-5 py-3
-                      text-sm font-medium
-                      text-neutral-700
-                      transition
-                      hover:bg-neutral-100
-                    "
-                  >
-                    View Pipeline
-
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right Analytics */}
-
-              <div
+              <Link
+                href="/dashboard/leads"
                 className="
-                  grid gap-4
-                  sm:grid-cols-2
+                  inline-flex items-center
+                  gap-2 rounded-2xl
+                  bg-neutral-950
+                  px-5 py-3
+                  text-sm font-medium
+                  text-white transition
+                  hover:bg-black
                 "
               >
+                Open Leads
 
-                <div
-                  className="
-                    rounded-3xl
-                    border border-neutral-200
-                    bg-neutral-50
-                    p-5
-                  "
-                >
-                  <div
-                    className="
-                      flex items-center
-                      justify-between
-                    "
-                  >
-                    <span
-                      className="
-                        text-sm
-                        text-neutral-500
-                      "
-                    >
-                      Qualified Leads
-                    </span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
 
-                    <Target
-                      className="
-                        h-4 w-4
-                        text-neutral-500
-                      "
-                    />
-                  </div>
-
-                  <div
-                    className="
-                      mt-4 text-4xl
-                      font-semibold
-                      text-neutral-950
-                    "
-                  >
-                    {totalQualified}
-                  </div>
-
-                  <div
-                    className="
-                      mt-3 text-sm
-                      text-emerald-600
-                    "
-                  >
-                    High-intent prospects identified
-                  </div>
-                </div>
-
-                <div
-                  className="
-                    rounded-3xl
-                    border border-neutral-200
-                    bg-neutral-50
-                    p-5
-                  "
-                >
-                  <div
-                    className="
-                      flex items-center
-                      justify-between
-                    "
-                  >
-                    <span
-                      className="
-                        text-sm
-                        text-neutral-500
-                      "
-                    >
-                      Conversion Rate
-                    </span>
-
-                    <TrendingUp
-                      className="
-                        h-4 w-4
-                        text-neutral-500
-                      "
-                    />
-                  </div>
-
-                  <div
-                    className="
-                      mt-4 text-4xl
-                      font-semibold
-                      text-neutral-950
-                    "
-                  >
-                    {conversionRate}%
-                  </div>
-
-                  <div
-                    className="
-                      mt-3 text-sm
-                      text-emerald-600
-                    "
-                  >
-                    Pipeline efficiency improving
-                  </div>
-                </div>
-              </div>
+              <Link
+                href="/dashboard/ai-messages"
+                className="
+                  inline-flex items-center
+                  gap-2 rounded-2xl
+                  border border-neutral-200
+                  bg-white px-5 py-3
+                  text-sm font-medium
+                  text-neutral-700
+                  transition
+                  hover:bg-neutral-100
+                "
+              >
+                Generate Outreach
+              </Link>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Metrics */}
+      {/* Metrics */}
 
-        <section
-          className="
-            grid gap-5
-            md:grid-cols-2
-            xl:grid-cols-4
-          "
-        >
-          {metrics.map(
-            (metric) => (
-              <div
-                key={metric.title}
-                className="
-                  rounded-[28px]
-                  border border-neutral-200
-                  bg-white p-6
-                "
-              >
-                <div
-                  className="
-                    flex items-start
-                    justify-between
-                  "
-                >
-                  <div>
+      <section
+        className="
+          grid gap-5
+          md:grid-cols-3
+        "
+      >
 
-                    <div
-                      className="
-                        text-sm
-                        text-neutral-500
-                      "
-                    >
-                      {metric.title}
-                    </div>
+        <MetricCard
+          title="Total Leads"
+          value={totalLeads}
+          icon={Users}
+          description="Prospects currently tracked"
+        />
 
-                    <div
-                      className="
-                        mt-4 text-4xl
-                        font-semibold
-                        tracking-tight
-                        text-neutral-950
-                      "
-                    >
-                      {metric.value}
-                    </div>
-                  </div>
+        <MetricCard
+          title="Generated Messages"
+          value={totalMessages}
+          icon={Sparkles}
+          description="Outreach drafts created"
+        />
 
-                  <div
-                    className="
-                      flex h-12 w-12
-                      items-center
-                      justify-center
-                      rounded-2xl
-                      bg-neutral-100
-                    "
-                  >
-                    <metric.icon
-                      className="
-                        h-5 w-5
-                        text-neutral-700
-                      "
-                    />
-                  </div>
-                </div>
-
-                <div
-                  className="
-                    mt-5 flex items-center
-                    gap-2 text-sm
-                  "
-                >
-                  <span
-                    className="
-                      rounded-full
-                      bg-emerald-100
-                      px-2.5 py-1
-                      font-medium
-                      text-emerald-700
-                    "
-                  >
-                    +{metric.growth}%
-                  </span>
-
-                  <span
-                    className="
-                      text-neutral-500
-                    "
-                  >
-                    vs previous cycle
-                  </span>
-                </div>
-
-                <p
-                  className="
-                    mt-4 text-sm
-                    leading-6
-                    text-neutral-500
-                  "
-                >
-                  {metric.description}
-                </p>
-              </div>
+        <MetricCard
+          title="Pipeline Activity"
+          value={
+            byStatus.reduce(
+              (
+                acc,
+                curr
+              ) =>
+                acc +
+                curr._count.status,
+              0
             )
-          )}
-        </section>
+          }
+          icon={TrendingUp}
+          description="Tracked status updates"
+        />
+      </section>
 
-        {/* Analytics */}
+      {/* Charts */}
 
-        <section
+      <section
+        className="
+          rounded-[32px]
+          border border-neutral-200
+          bg-white p-7
+        "
+      >
+        <div>
+
+          <div
+            className="
+              text-sm
+              text-neutral-500
+            "
+          >
+            Overview
+          </div>
+
+          <h2
+            className="
+              mt-1 text-2xl
+              font-semibold
+              tracking-tight
+              text-neutral-950
+            "
+          >
+            Pipeline analytics
+          </h2>
+        </div>
+
+        <div className="mt-8">
+          <DashboardCharts
+            byStatus={byStatus}
+          />
+        </div>
+      </section>
+
+      {/* Grid */}
+
+      <section
+        className="
+          grid gap-6
+          xl:grid-cols-2
+        "
+      >
+
+        {/* Leads */}
+
+        <div
           className="
             rounded-[32px]
             border border-neutral-200
             bg-white p-7
           "
         >
+
           <div
             className="
-              flex flex-col gap-3
-              sm:flex-row
-              sm:items-center
-              sm:justify-between
+              flex items-center
+              justify-between
             "
           >
             <div>
@@ -630,378 +322,364 @@ export default async function DashboardOverview() {
                   text-neutral-500
                 "
               >
-                Performance Analytics
+                Leads
               </div>
 
-              <h2
+              <h3
                 className="
-                  mt-1 text-2xl
+                  mt-1 text-xl
                   font-semibold
-                  tracking-tight
                   text-neutral-950
                 "
               >
-                Pipeline intelligence
-              </h2>
+                Recently added
+              </h3>
             </div>
 
-            <div
+            <Link
+              href="/dashboard/leads"
               className="
-                inline-flex items-center
-                gap-2 rounded-full
-                border border-neutral-200
-                bg-neutral-50
-                px-4 py-2
-                text-sm
+                text-sm font-medium
                 text-neutral-600
+                hover:text-black
               "
             >
-              <Clock3 className="h-4 w-4" />
-
-              Real-time operational metrics
-            </div>
+              View all
+            </Link>
           </div>
 
-          <div className="mt-8">
-            <DashboardCharts
-              byStatus={byStatus}
-            />
-          </div>
-        </section>
+          <div className="mt-6 space-y-4">
 
-        {/* Activity Grid */}
-
-        <section
-          className="
-            grid gap-6
-            xl:grid-cols-2
-          "
-        >
-
-          {/* Leads */}
-
-          <div
-            className="
-              rounded-[32px]
-              border border-neutral-200
-              bg-white p-7
-            "
-          >
-            <div
-              className="
-                flex items-center
-                justify-between
-              "
-            >
-              <div>
-
-                <div
-                  className="
-                    text-sm
-                    text-neutral-500
-                  "
-                >
-                  Lead Activity
-                </div>
-
-                <h3
-                  className="
-                    mt-1 text-xl
-                    font-semibold
-                    text-neutral-950
-                  "
-                >
-                  Recent pipeline additions
-                </h3>
-              </div>
-
-              <Link
+            {recentLeads.length ===
+            0 ? (
+              <EmptyState
+                title="No leads available"
+                description="Create or import leads to begin tracking outreach."
                 href="/dashboard/leads"
-                className="
-                  text-sm font-medium
-                  text-neutral-600
-                  hover:text-black
-                "
-              >
-                View all
-              </Link>
-            </div>
+                action="Open Leads"
+              />
+            ) : (
+              recentLeads.map(
+                (lead) => (
+                  <div
+                    key={lead.id}
+                    className="
+                      rounded-3xl
+                      border border-neutral-200
+                      bg-neutral-50
+                      p-5
+                    "
+                  >
 
-            <div className="mt-6 space-y-4">
-
-              {recentLeads.length ===
-              0 ? (
-                <EmptyState
-                  title="No leads available"
-                  description="Import leads or create your first outreach profile to begin pipeline tracking."
-                  href="/dashboard/leads"
-                  action="Open Leads"
-                />
-              ) : (
-                recentLeads.map(
-                  (lead) => (
-                    <Link
-                      key={lead.id}
-                      href={`/dashboard/leads/${lead.id}`}
-                      className="
-                        block rounded-3xl
-                        border border-neutral-200
-                        bg-neutral-50
-                        p-5 transition
-                        hover:border-neutral-300
-                        hover:bg-white
-                      "
-                    >
-                      <div
-                        className="
-                          flex items-start
-                          justify-between
-                          gap-4
-                        "
-                      >
-                        <div>
-
-                          <div
-                            className="
-                              text-base
-                              font-medium
-                              text-neutral-950
-                            "
-                          >
-                            {
-                              lead.fullName
-                            }
-                          </div>
-
-                          <div
-                            className="
-                              mt-2 text-sm
-                              text-neutral-500
-                            "
-                          >
-                            {[
-                              lead.jobTitle,
-                              lead.company,
-                            ]
-                              .filter(
-                                Boolean
-                              )
-                              .join(
-                                ' • '
-                              ) ||
-                              'No role information'}
-                          </div>
-
-                          <div
-                            className="
-                              mt-4 flex
-                              flex-wrap gap-2
-                            "
-                          >
-                            {lead.tags
-                              .slice(
-                                0,
-                                3
-                              )
-                              .map(
-                                (
-                                  tag
-                                ) => (
-                                  <span
-                                    key={
-                                      tag.id
-                                    }
-                                    className="
-                                      rounded-full
-                                      border border-neutral-200
-                                      bg-white
-                                      px-3 py-1
-                                      text-xs
-                                      text-neutral-600
-                                    "
-                                  >
-                                    {
-                                      tag.label
-                                    }
-                                  </span>
-                                )
-                              )}
-                          </div>
-                        </div>
-
-                        <div
-                          className="
-                            text-xs
-                            text-neutral-400
-                          "
-                        >
-                          {timeAgo(
-                            lead.createdAt
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Outreach */}
-
-          <div
-            className="
-              rounded-[32px]
-              border border-neutral-200
-              bg-white p-7
-            "
-          >
-            <div
-              className="
-                flex items-center
-                justify-between
-              "
-            >
-              <div>
-
-                <div
-                  className="
-                    text-sm
-                    text-neutral-500
-                  "
-                >
-                  AI Outreach
-                </div>
-
-                <h3
-                  className="
-                    mt-1 text-xl
-                    font-semibold
-                    text-neutral-950
-                  "
-                >
-                  Generated communication
-                </h3>
-              </div>
-
-              <Link
-                href="/dashboard/ai-messages"
-                className="
-                  text-sm font-medium
-                  text-neutral-600
-                  hover:text-black
-                "
-              >
-                View all
-              </Link>
-            </div>
-
-            <div className="mt-6 space-y-4">
-
-              {recentMessages.length ===
-              0 ? (
-                <EmptyState
-                  title="No AI outreach generated"
-                  description="Generate contextual AI-powered communication for your leads."
-                  href="/dashboard/ai-messages"
-                  action="Generate Outreach"
-                />
-              ) : (
-                recentMessages.map(
-                  (
-                    message
-                  ) => (
                     <div
-                      key={
-                        message.id
-                      }
                       className="
-                        rounded-3xl
-                        border border-neutral-200
-                        bg-neutral-50
-                        p-5
+                        flex items-start
+                        justify-between
+                        gap-4
                       "
                     >
-                      <div
-                        className="
-                          flex items-center
-                          justify-between
-                        "
-                      >
-                        <span
-                          className="
-                            rounded-full
-                            border border-neutral-200
-                            bg-white
-                            px-3 py-1
-                            text-xs font-medium
-                            uppercase tracking-wide
-                            text-neutral-700
-                          "
-                        >
-                          {message.kind.replace(
-                            '_',
-                            ' '
-                          )}
-                        </span>
 
-                        <span
-                          className="
-                            text-xs
-                            text-neutral-400
-                          "
-                        >
-                          {timeAgo(
-                            message.createdAt
-                          )}
-                        </span>
-                      </div>
+                      <div>
 
-                      <p
-                        className="
-                          mt-4 line-clamp-4
-                          text-sm
-                          leading-7
-                          text-neutral-700
-                        "
-                      >
-                        {
-                          message.output
-                        }
-                      </p>
-
-                      {message.lead
-                        ?.fullName && (
                         <div
                           className="
-                            mt-4 flex
-                            items-center gap-2
-                            text-xs
+                            text-base
+                            font-medium
+                            text-neutral-950
+                          "
+                        >
+                          {lead.fullName}
+                        </div>
+
+                        <div
+                          className="
+                            mt-2 text-sm
                             text-neutral-500
                           "
                         >
-                          <MessageSquare className="h-3 w-3" />
-
-                          {
-                            message
-                              .lead
-                              .fullName
-                          }
-
-                          {message
-                            .lead
-                            .company &&
-                            ` • ${message.lead.company}`}
+                          {[
+                            lead.jobTitle,
+                            lead.company,
+                          ]
+                            .filter(Boolean)
+                            .join(' • ')}
                         </div>
-                      )}
+
+                        <div
+                          className="
+                            mt-4 flex
+                            flex-wrap gap-2
+                          "
+                        >
+                          {lead.tags
+                            .slice(0, 3)
+                            .map((tag) => (
+                              <span
+                                key={tag.id}
+                                className="
+                                  rounded-full
+                                  border border-neutral-200
+                                  bg-white
+                                  px-3 py-1
+                                  text-xs
+                                  text-neutral-600
+                                "
+                              >
+                                {tag.label}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+
+                      <div
+                        className="
+                          text-xs
+                          text-neutral-400
+                        "
+                      >
+                        {timeAgo(
+                          lead.createdAt
+                        )}
+                      </div>
                     </div>
-                  )
+                  </div>
                 )
-              )}
-            </div>
+              )
+            )}
           </div>
-        </section>
+        </div>
+
+        {/* Messages */}
+
+        <div
+          className="
+            rounded-[32px]
+            border border-neutral-200
+            bg-white p-7
+          "
+        >
+
+          <div
+            className="
+              flex items-center
+              justify-between
+            "
+          >
+            <div>
+
+              <div
+                className="
+                  text-sm
+                  text-neutral-500
+                "
+              >
+                Outreach
+              </div>
+
+              <h3
+                className="
+                  mt-1 text-xl
+                  font-semibold
+                  text-neutral-950
+                "
+              >
+                Recent drafts
+              </h3>
+            </div>
+
+            <Link
+              href="/dashboard/ai-messages"
+              className="
+                text-sm font-medium
+                text-neutral-600
+                hover:text-black
+              "
+            >
+              View all
+            </Link>
+          </div>
+
+          <div className="mt-6 space-y-4">
+
+            {recentMessages.length ===
+            0 ? (
+              <EmptyState
+                title="No outreach generated"
+                description="Generate personalized messages for your leads."
+                href="/dashboard/ai-messages"
+                action="Open Outreach"
+              />
+            ) : (
+              recentMessages.map(
+                (message) => (
+                  <div
+                    key={message.id}
+                    className="
+                      rounded-3xl
+                      border border-neutral-200
+                      bg-neutral-50
+                      p-5
+                    "
+                  >
+
+                    <div
+                      className="
+                        flex items-center
+                        justify-between
+                      "
+                    >
+
+                      <span
+                        className="
+                          rounded-full
+                          bg-white
+                          px-3 py-1
+                          text-xs
+                          font-medium
+                          text-neutral-700
+                        "
+                      >
+                        {message.kind.replace(
+                          '_',
+                          ' '
+                        )}
+                      </span>
+
+                      <span
+                        className="
+                          text-xs
+                          text-neutral-400
+                        "
+                      >
+                        {timeAgo(
+                          message.createdAt
+                        )}
+                      </span>
+                    </div>
+
+                    <p
+                      className="
+                        mt-4 line-clamp-4
+                        text-sm
+                        leading-7
+                        text-neutral-700
+                      "
+                    >
+                      {message.output}
+                    </p>
+
+                    {message.lead
+                      ?.fullName && (
+                      <div
+                        className="
+                          mt-4 flex
+                          items-center gap-2
+                          text-xs
+                          text-neutral-500
+                        "
+                      >
+                        <MessageSquare className="h-3 w-3" />
+
+                        {
+                          message
+                            .lead
+                            .fullName
+                        }
+
+                        {message.lead
+                          .company &&
+                          ` • ${message.lead.company}`}
+                      </div>
+                    )}
+                  </div>
+                )
+              )
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  icon: Icon,
+  description,
+}: {
+  title: string;
+
+  value: string | number;
+
+  icon: any;
+
+  description: string;
+}) {
+  return (
+    <div
+      className="
+        rounded-[28px]
+        border border-neutral-200
+        bg-white p-6
+      "
+    >
+      <div
+        className="
+          flex items-start
+          justify-between
+        "
+      >
+
+        <div>
+
+          <div
+            className="
+              text-sm
+              text-neutral-500
+            "
+          >
+            {title}
+          </div>
+
+          <div
+            className="
+              mt-4 text-4xl
+              font-semibold
+              tracking-tight
+              text-neutral-950
+            "
+          >
+            {value}
+          </div>
+        </div>
+
+        <div
+          className="
+            flex h-12 w-12
+            items-center justify-center
+            rounded-2xl
+            bg-neutral-100
+          "
+        >
+          <Icon
+            className="
+              h-5 w-5
+              text-neutral-700
+            "
+          />
+        </div>
       </div>
+
+      <p
+        className="
+          mt-5 text-sm
+          leading-6
+          text-neutral-500
+        "
+      >
+        {description}
+      </p>
     </div>
   );
 }
