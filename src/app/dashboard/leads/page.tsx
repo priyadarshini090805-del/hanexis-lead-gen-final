@@ -125,7 +125,7 @@ export default function LeadsPage() {
           >
             <Sparkles className="h-3.5 w-3.5" />
 
-            AI-Powered Lead Intelligence
+            
           </div>
 
           <h1

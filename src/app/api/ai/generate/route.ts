@@ -10,209 +10,100 @@ import { prisma } from '@/lib/prisma';
 
 import { generateMessage } from '@/lib/ai';
 
-const generateSchema = z.object({
+const schema = z.object({
   kind: z.enum([
     'CONNECTION',
     'FOLLOW_UP',
     'SALES_PITCH',
-    'RE_ENGAGEMENT',
     'CUSTOM',
   ]),
 
-  leadId: z.string().optional(),
-
   tone: z
     .enum([
-      'PROFESSIONAL',
-      'FRIENDLY',
-      'DIRECT',
-      'CONSULTATIVE',
+      'friendly',
+      'professional',
+      'casual',
+      'enthusiastic',
     ])
     .optional(),
 
-  channel: z
-    .enum(['EMAIL', 'LINKEDIN', 'INSTAGRAM'])
-    .optional(),
-
-  product: z.string().max(300).optional(),
-
-  campaignGoal: z.string().max(500).optional(),
-
-  promptTemplate: z
+  product: z
     .string()
-    .max(4000)
     .optional(),
 
-  ephemeralLead: z
-    .object({
-      fullName: z.string().min(1),
+  promptTemplate:
+    z.string().optional(),
 
-      company: z.string().optional(),
+  ephemeralLead:
+    z.object({
+      fullName:
+        z.string(),
 
-      companyWebsite: z.string().optional(),
+      company:
+        z.string().optional(),
 
-      jobTitle: z.string().optional(),
+      jobTitle:
+        z.string().optional(),
 
-      bio: z.string().optional(),
-
-      aiSummary: z.string().optional(),
-
-      engagementScore: z.number().optional(),
-    })
-    .optional(),
+      bio:
+        z.string().optional(),
+    }),
 });
 
-async function getLeadData(
-  leadId: string,
-  ownerId: string
+export async function POST(
+  req: Request
 ) {
-  return prisma.lead.findFirst({
-    where: {
-      id: leadId,
-
-      ownerId,
-    },
-
-    select: {
-      id: true,
-
-      fullName: true,
-
-      company: true,
-
-      companyWebsite: true,
-
-      jobTitle: true,
-
-      bio: true,
-
-      aiSummary: true,
-
-      engagementScore: true,
-
-      status: true,
-    },
-  });
-}
-
-export async function POST(request: Request) {
   try {
     const session =
-      await getServerSession(authOptions);
+      await getServerSession(
+        authOptions
+      );
 
-    if (!session?.user?.id) {
+    if (
+      !session?.user?.id
+    ) {
       return NextResponse.json(
         {
-          error: 'Unauthorized access',
+          error:
+            'Unauthorized',
         },
+
         {
           status: 401,
         }
       );
     }
 
-    const body = await request.json();
+    const body =
+      await req.json();
 
     const parsed =
-      generateSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: 'Invalid request payload',
-
-          issues: parsed.error.flatten(),
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    let leadData =
-      parsed.data.ephemeralLead ?? null;
-
-    if (parsed.data.leadId) {
-      const lead = await getLeadData(
-        parsed.data.leadId,
-        session.user.id
+      schema.safeParse(
+        body
       );
 
-      if (!lead) {
-        return NextResponse.json(
-          {
-            error:
-              'Lead not found or inaccessible',
-          },
-          {
-            status: 404,
-          }
-        );
-      }
-
-      leadData = {
-        ...lead,
-
-        company:
-          lead.company ?? undefined,
-
-        companyWebsite:
-          lead.companyWebsite ?? undefined,
-
-        jobTitle:
-          lead.jobTitle ?? undefined,
-
-        bio:
-          lead.bio ?? undefined,
-
-        aiSummary:
-          lead.aiSummary ?? undefined,
-      };
-
-      /*
-      |--------------------------------------------------------------------------
-      | Engagement Tracking
-      |--------------------------------------------------------------------------
-      |
-      | Updates outreach activity timestamps dynamically.
-      |
-      */
-
-      await prisma.lead.update({
-        where: {
-          id: lead.id,
-        },
-
-        data: {
-          lastContactedAt: new Date(),
-        },
-      });
-    }
-
-    if (!leadData) {
+    if (
+      !parsed.success
+    ) {
       return NextResponse.json(
         {
           error:
-            'Provide either leadId or ephemeralLead',
+            'Invalid input',
+
+          details:
+            parsed.error.flatten(),
         },
+
         {
           status: 400,
         }
       );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | AI Message Generation
-    |--------------------------------------------------------------------------
-    */
-
-    const aiResult =
+    const result =
       await generateMessage({
-        kind: parsed.data.kind,
-
-        channel:
-          parsed.data.channel,
+        kind:
+          parsed.data.kind,
 
         tone:
           parsed.data.tone,
@@ -220,119 +111,56 @@ export async function POST(request: Request) {
         product:
           parsed.data.product,
 
-        campaignGoal:
-          parsed.data.campaignGoal,
-
         promptTemplate:
-          parsed.data.promptTemplate,
+          parsed.data
+            .promptTemplate,
 
-        lead: leadData,
+        lead:
+          parsed.data
+            .ephemeralLead,
       });
 
-    /*
-    |--------------------------------------------------------------------------
-    | AI Message Persistence
-    |--------------------------------------------------------------------------
-    */
+    const saved =
+      await prisma.aiMessage.create(
+        {
+          data: {
+            ownerId:
+              session
+                .user.id,
 
-    const savedMessage =
-      await prisma.aiMessage.create({
-        data: {
-          ownerId: session.user.id,
+            kind:
+              parsed.data
+                .kind,
 
-          leadId:
-            parsed.data.leadId ?? null,
+            prompt:
+              result.prompt,
 
-          kind:
-            parsed.data.kind,
+            output:
+              result.output,
 
-          channel:
-            parsed.data.channel ??
-            'EMAIL',
+            model:
+              result.model,
+          },
+        }
+      );
 
-          tone:
-            parsed.data.tone ??
-            'PROFESSIONAL',
-
-          prompt:
-            aiResult.prompt,
-
-          output:
-            aiResult.output,
-
-          model:
-            aiResult.model,
-
-          personalizationScore:
-            aiResult.personalizationScore,
-        },
-      });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Activity Logging
-    |--------------------------------------------------------------------------
-    */
-
-    await prisma.activityLog.create({
-      data: {
-        userId: session.user.id,
-
-        action:
-          'AI_MESSAGE_GENERATED',
-
-        entityType:
-          'AiMessage',
-
-        entityId:
-          savedMessage.id,
-
-        metadata: JSON.stringify({
-          kind:
-            parsed.data.kind,
-
-          channel:
-            parsed.data.channel,
-
-          personalizationScore:
-            aiResult.personalizationScore,
-        }),
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-
-      message: {
-        id: savedMessage.id,
-
-        output:
-          savedMessage.output,
-
-        model:
-          savedMessage.model,
-
-        personalizationScore:
-          savedMessage.personalizationScore,
-
-        generatedAt:
-          savedMessage.createdAt,
-
-        reasoning:
-          aiResult.reasoning,
-      },
-    });
+    return NextResponse.json(
+      {
+        message: saved,
+      }
+    );
   } catch (error) {
     console.error(
-      '[AI_GENERATION_ERROR]',
+      'AI GENERATION ERROR:',
       error
     );
 
     return NextResponse.json(
       {
         error:
-          'AI generation failed unexpectedly',
+          'Internal server error',
       },
+
       {
         status: 500,
       }
@@ -343,13 +171,19 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const session =
-      await getServerSession(authOptions);
+      await getServerSession(
+        authOptions
+      );
 
-    if (!session?.user?.id) {
+    if (
+      !session?.user?.id
+    ) {
       return NextResponse.json(
         {
-          error: 'Unauthorized access',
+          error:
+            'Unauthorized',
         },
+
         {
           status: 401,
         }
@@ -357,48 +191,39 @@ export async function GET() {
     }
 
     const messages =
-      await prisma.aiMessage.findMany({
-        where: {
-          ownerId: session.user.id,
-        },
-
-        orderBy: {
-          createdAt: 'desc',
-        },
-
-        take: 100,
-
-        include: {
-          lead: {
-            select: {
-              fullName: true,
-
-              company: true,
-
-              status: true,
-            },
+      await prisma.aiMessage.findMany(
+        {
+          where: {
+            ownerId:
+              session
+                .user.id,
           },
-        },
-      });
 
-    return NextResponse.json({
-      success: true,
+          orderBy: {
+            createdAt:
+              'desc',
+          },
 
-      total: messages.length,
+          take: 20,
+        }
+      );
 
-      messages,
-    });
+    return NextResponse.json(
+      {
+        messages,
+      }
+    );
   } catch (error) {
     console.error(
-      '[FETCH_AI_MESSAGES_ERROR]',
       error
     );
 
     return NextResponse.json(
       {
         error:
-          'Failed to fetch AI messages',
+          'Failed fetching messages',
       },
+
       {
         status: 500,
       }
