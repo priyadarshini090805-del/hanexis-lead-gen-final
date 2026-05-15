@@ -22,9 +22,7 @@ const schema = z.object({
   z.enum([
     'FRIENDLY',
     'PROFESSIONAL',
-    'CASUAL',
-    'ENTHUSIASTIC',
-  ])
+    ])
   .optional(),
 
   product: z

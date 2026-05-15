@@ -57,8 +57,7 @@ const KINDS = [
 const TONES = [
   'friendly',
   'professional',
-  'casual',
-  'enthusiastic',
+,
 ] as const;
 
 export function LeadDrawer({
