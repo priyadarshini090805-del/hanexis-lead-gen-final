@@ -10,7 +10,7 @@ const genAI =
 const model =
   genAI.getGenerativeModel({
     model:
-      'gemini-1.5-flash',
+      'gemini-pro',
   });
 
 export const SEED_PROMPTS = [
