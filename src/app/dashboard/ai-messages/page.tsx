@@ -1,42 +1,135 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Wand2, Sparkles, Copy, Check } from 'lucide-react';
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  AnimatePresence,
+  motion,
+} from 'framer-motion';
+
 import toast from 'react-hot-toast';
-import { cn, timeAgo } from '@/lib/utils';
+
+import {
+  Wand2,
+  Copy,
+  Check,
+  Loader2,
+  Sparkles,
+} from 'lucide-react';
+
+import {
+  cn,
+  timeAgo,
+} from '@/lib/utils';
 
 const KINDS = [
-  { v: 'CONNECTION', label: 'Connection request', desc: 'Short LinkedIn invite copy' },
-  { v: 'FOLLOW_UP', label: 'Follow-up', desc: 'Polite second-touch message' },
-  { v: 'SALES_PITCH', label: 'Sales pitch', desc: 'Full personalized pitch' },
+  {
+    v: 'CONNECTION',
+    label:
+      'Connection request',
+
+    desc:
+      'Short introductory outreach',
+  },
+
+  {
+    v: 'FOLLOW_UP',
+    label: 'Follow-up',
+
+    desc:
+      'Second-touch conversation',
+  },
+
+  {
+    v: 'SALES_PITCH',
+    label: 'Sales pitch',
+
+    desc:
+      'Full personalized pitch',
+  },
 ] as const;
-const TONES = ['friendly', 'professional', 'casual', 'enthusiastic'] as const;
+
+const TONES = [
+  'friendly',
+  'professional',
+  'casual',
+  'enthusiastic',
+] as const;
 
 interface MessageItem {
   id: string;
-  kind: 'CONNECTION' | 'FOLLOW_UP' | 'SALES_PITCH' | 'CUSTOM';
+
+  kind:
+    | 'CONNECTION'
+    | 'FOLLOW_UP'
+    | 'SALES_PITCH'
+    | 'CUSTOM';
+
   output: string;
+
   model: string;
+
   createdAt: string;
-  lead?: { fullName: string; company: string | null } | null;
+
+  lead?: {
+    fullName: string;
+
+    company: string | null;
+  } | null;
 }
 
 export default function AIMessagesPage() {
-  const [kind, setKind] = useState<(typeof KINDS)[number]['v']>('CONNECTION');
-  const [tone, setTone] = useState<(typeof TONES)[number]>('professional');
-  const [product, setProduct] = useState('');
-  const [form, setForm] = useState({ fullName: '', company: '', jobTitle: '', bio: '' });
-  const [output, setOutput] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [history, setHistory] = useState<MessageItem[]>([]);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [kind, setKind] =
+    useState<
+      (typeof KINDS)[number]['v']
+    >('CONNECTION');
+
+  const [tone, setTone] =
+    useState<
+      (typeof TONES)[number]
+    >('professional');
+
+  const [product, setProduct] =
+    useState('');
+
+  const [form, setForm] =
+    useState({
+      fullName: '',
+      company: '',
+      jobTitle: '',
+      bio: '',
+    });
+
+  const [output, setOutput] =
+    useState('');
+
+  const [generating, setGenerating] =
+    useState(false);
+
+  const [history, setHistory] =
+    useState<MessageItem[]>([]);
+
+  const [copiedId, setCopiedId] =
+    useState<string | null>(
+      null
+    );
 
   async function loadHistory() {
-    const res = await fetch('/api/ai/generate');
-    if (res.ok) {
-      const data = await res.json();
-      setHistory(data.messages);
+    const response =
+      await fetch(
+        '/api/ai/generate'
+      );
+
+    if (response.ok) {
+      const data =
+        await response.json();
+
+      setHistory(
+        data.messages
+      );
     }
   }
 
@@ -46,162 +139,576 @@ export default function AIMessagesPage() {
 
   async function generate() {
     if (!form.fullName) {
-      toast.error("At least a recipient name is required");
+      toast.error(
+        'Recipient name is required'
+      );
+
       return;
     }
-    setGenerating(true);
-    setOutput('');
-    const res = await fetch('/api/ai/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        kind,
-        tone,
-        product,
-        ephemeralLead: form,
-      }),
-    });
-    setGenerating(false);
-    if (res.ok) {
-      const data = await res.json();
-      setOutput(data.message.output);
+
+    try {
+      setGenerating(true);
+
+      setOutput('');
+
+      const response =
+        await fetch(
+          '/api/ai/generate',
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            body: JSON.stringify(
+              {
+                kind,
+                tone,
+                product,
+                ephemeralLead:
+                  form,
+              }
+            ),
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'Generation failed'
+        );
+      }
+
+      const data =
+        await response.json();
+
+      setOutput(
+        data.message.output
+      );
+
       await loadHistory();
-    } else toast.error('Generation failed');
+    } catch (err) {
+      console.error(err);
+
+      toast.error(
+        'Unable to generate message'
+      );
+    } finally {
+      setGenerating(false);
+    }
   }
 
-  function copy(text: string, id: string) {
-    navigator.clipboard.writeText(text);
+  function copy(
+    text: string,
+    id: string
+  ) {
+    navigator.clipboard.writeText(
+      text
+    );
+
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1500);
+
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 1500);
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+
+      {/* Header */}
+
       <div>
-        <h1 className="text-3xl font-bold text-blush-900">AI Messages</h1>
-        <p className="mt-1 text-blush-700">Generate personalized outreach in seconds.</p>
+
+        <div
+          className="
+            text-sm
+            text-neutral-500
+          "
+        >
+          Outreach workspace
+        </div>
+
+        <h1
+          className="
+            mt-1 text-4xl
+            font-semibold
+            tracking-tight
+            text-neutral-950
+          "
+        >
+          Generate outreach
+        </h1>
+
+        <p
+          className="
+            mt-4 max-w-2xl
+            text-base
+            leading-8
+            text-neutral-600
+          "
+        >
+          Create personalized
+          outbound messages
+          using prospect details,
+          company context,
+          and communication tone.
+        </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Generator */}
-        <div className="card-pink lg:col-span-2">
-          <h3 className="flex items-center gap-2 text-lg font-bold text-blush-900">
-            <Sparkles className="h-5 w-5 text-blush-500" />
-            Compose a new message
-          </h3>
+      {/* Layout */}
 
-          {/* Kind picker */}
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {KINDS.map((k) => (
-              <button
-                key={k.v}
-                onClick={() => setKind(k.v)}
-                className={cn(
-                  'rounded-2xl border p-4 text-left transition-all',
-                  kind === k.v
-                    ? 'border-blush-500 bg-pink-gradient text-white shadow-pink-glow'
-                    : 'border-blush-200 bg-white/70 text-blush-800 hover:border-blush-400 hover:-translate-y-0.5'
-                )}
+      <div
+        className="
+          grid gap-6
+          xl:grid-cols-[1.3fr_0.7fr]
+        "
+      >
+
+        {/* Generator */}
+
+        <div
+          className="
+            rounded-[32px]
+            border border-neutral-200
+            bg-white
+            p-7
+          "
+        >
+
+          {/* Top */}
+
+          <div
+            className="
+              flex items-center
+              justify-between
+            "
+          >
+
+            <div>
+
+              <div
+                className="
+                  text-sm
+                  text-neutral-500
+                "
               >
-                <div className="font-semibold">{k.label}</div>
-                <div className={cn('text-xs', kind === k.v ? 'text-white/90' : 'text-blush-500')}>
-                  {k.desc}
-                </div>
-              </button>
-            ))}
+                Message composer
+              </div>
+
+              <h2
+                className="
+                  mt-1 text-2xl
+                  font-semibold
+                  tracking-tight
+                  text-neutral-950
+                "
+              >
+                New outreach draft
+              </h2>
+            </div>
+
+            <div
+              className="
+                hidden items-center
+                gap-2 rounded-full
+                border border-neutral-200
+                bg-neutral-50
+                px-4 py-2
+                text-sm
+                text-neutral-600
+                lg:flex
+              "
+            >
+              <Sparkles className="h-4 w-4" />
+
+              AI-assisted
+            </div>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <Field label="Recipient name *">
+          {/* Message Type */}
+
+          <div
+            className="
+              mt-7 grid gap-3
+              md:grid-cols-3
+            "
+          >
+
+            {KINDS.map(
+              (item) => (
+                <button
+                  key={item.v}
+                  onClick={() =>
+                    setKind(
+                      item.v
+                    )
+                  }
+                  className={cn(
+                    `
+                      rounded-3xl
+                      border p-5
+                      text-left
+                      transition-all
+                    `,
+
+                    kind === item.v
+                      ? `
+                        border-neutral-900
+                        bg-neutral-900
+                        text-white
+                      `
+                      : `
+                        border-neutral-200
+                        bg-neutral-50
+                        hover:border-neutral-300
+                        hover:bg-white
+                      `
+                  )}
+                >
+
+                  <div
+                    className="
+                      text-base
+                      font-medium
+                    "
+                  >
+                    {item.label}
+                  </div>
+
+                  <div
+                    className={cn(
+                      `
+                        mt-2 text-sm
+                        leading-6
+                      `,
+
+                      kind ===
+                        item.v
+                        ? `
+                          text-neutral-300
+                        `
+                        : `
+                          text-neutral-500
+                        `
+                    )}
+                  >
+                    {item.desc}
+                  </div>
+                </button>
+              )
+            )}
+          </div>
+
+          {/* Form */}
+
+          <div
+            className="
+              mt-7 grid gap-5
+              md:grid-cols-2
+            "
+          >
+
+            <Field label="Recipient name">
+
               <input
-                className="input-pink"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                className={
+                  inputClass
+                }
+                value={
+                  form.fullName
+                }
+                onChange={(
+                  e
+                ) =>
+                  setForm({
+                    ...form,
+                    fullName:
+                      e.target
+                        .value,
+                  })
+                }
                 placeholder="Asha Patel"
               />
             </Field>
+
             <Field label="Company">
+
               <input
-                className="input-pink"
-                value={form.company}
-                onChange={(e) => setForm({ ...form, company: e.target.value })}
-                placeholder="Acme Co."
+                className={
+                  inputClass
+                }
+                value={
+                  form.company
+                }
+                onChange={(
+                  e
+                ) =>
+                  setForm({
+                    ...form,
+                    company:
+                      e.target
+                        .value,
+                  })
+                }
+                placeholder="Acme Inc."
               />
             </Field>
+
             <Field label="Job title">
+
               <input
-                className="input-pink"
-                value={form.jobTitle}
-                onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
-                placeholder="Head of Sales"
+                className={
+                  inputClass
+                }
+                value={
+                  form.jobTitle
+                }
+                onChange={(
+                  e
+                ) =>
+                  setForm({
+                    ...form,
+                    jobTitle:
+                      e.target
+                        .value,
+                  })
+                }
+                placeholder="Head of Growth"
               />
             </Field>
+
             <Field label="Tone">
+
               <select
-                className="input-pink"
+                className={
+                  inputClass
+                }
                 value={tone}
-                onChange={(e) => setTone(e.target.value as any)}
+                onChange={(
+                  e
+                ) =>
+                  setTone(
+                    e.target
+                      .value as any
+                  )
+                }
               >
-                {TONES.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
+
+                {TONES.map(
+                  (
+                    toneOption
+                  ) => (
+                    <option
+                      key={
+                        toneOption
+                      }
+                    >
+                      {
+                        toneOption
+                      }
+                    </option>
+                  )
+                )}
               </select>
             </Field>
           </div>
 
-          <div className="mt-3">
-            <Field label="What you're offering (optional)">
+          {/* Product */}
+
+          <div className="mt-5">
+
+            <Field label="Offering">
+
               <input
-                className="input-pink"
+                className={
+                  inputClass
+                }
                 value={product}
-                onChange={(e) => setProduct(e.target.value)}
-                placeholder="our AI lead-gen platform"
+                onChange={(
+                  e
+                ) =>
+                  setProduct(
+                    e.target
+                      .value
+                  )
+                }
+                placeholder="Lead generation platform for outbound teams"
               />
             </Field>
           </div>
 
-          <div className="mt-3">
-            <Field label="About them (recent post, headline, etc.)">
+          {/* Context */}
+
+          <div className="mt-5">
+
+            <Field label="Prospect context">
+
               <textarea
-                rows={3}
-                className="input-pink resize-none"
-                value={form.bio}
-                onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                placeholder="Just raised Series A. Posted about hiring SDRs. Speaks at SaaStr."
+                rows={5}
+                className={`
+                  ${inputClass}
+                  resize-none py-4
+                `}
+                value={
+                  form.bio
+                }
+                onChange={(
+                  e
+                ) =>
+                  setForm({
+                    ...form,
+                    bio: e.target
+                      .value,
+                  })
+                }
+                placeholder="Recent funding round, hiring activity, product launch, social posts, or other useful context..."
               />
             </Field>
           </div>
 
-          <button onClick={generate} disabled={generating} className="btn-primary mt-5 w-full sm:w-auto">
-            <Wand2 className="h-4 w-4" />
-            {generating ? 'Generating…' : 'Generate message'}
+          {/* CTA */}
+
+          <button
+            onClick={generate}
+            disabled={generating}
+            className="
+              mt-7 inline-flex
+              h-12 items-center
+              justify-center
+              gap-2 rounded-2xl
+              bg-neutral-950
+              px-5
+              text-sm font-medium
+              text-white
+              transition
+              hover:bg-black
+              disabled:opacity-60
+            "
+          >
+
+            {generating ? (
+              <Loader2
+                className="
+                  h-4 w-4
+                  animate-spin
+                "
+              />
+            ) : (
+              <Wand2 className="h-4 w-4" />
+            )}
+
+            {generating
+              ? 'Generating draft...'
+              : 'Generate message'}
           </button>
 
-          {generating && <div className="mt-5 h-32 rounded-2xl shimmer" />}
+          {/* Loading */}
+
+          {generating && (
+            <div
+              className="
+                mt-7 h-44
+                animate-pulse
+                rounded-[28px]
+                bg-neutral-100
+              "
+            />
+          )}
+
+          {/* Output */}
 
           <AnimatePresence>
+
             {output && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-5 rounded-2xl border border-blush-200 bg-gradient-to-br from-blush-50 to-rose-50 p-5"
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="
+                  mt-7 rounded-[30px]
+                  border border-neutral-200
+                  bg-neutral-50
+                  p-6
+                "
               >
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="badge-pink">{kind.replace('_', ' ')}</span>
-                  <button
-                    onClick={() => copy(output, 'live')}
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold',
-                      copiedId === 'live'
-                        ? 'bg-rose-500 text-white'
-                        : 'bg-white/80 text-blush-700 hover:bg-white'
-                    )}
+
+                <div
+                  className="
+                    mb-5 flex
+                    items-center
+                    justify-between
+                  "
+                >
+
+                  <div
+                    className="
+                      rounded-full
+                      border border-neutral-200
+                      bg-white
+                      px-4 py-2
+                      text-xs
+                      font-medium
+                      uppercase
+                      tracking-wide
+                      text-neutral-700
+                    "
                   >
-                    {copiedId === 'live' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    {copiedId === 'live' ? 'Copied' : 'Copy'}
+                    {kind.replace(
+                      '_',
+                      ' '
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      copy(
+                        output,
+                        'live'
+                      )
+                    }
+                    className="
+                      inline-flex
+                      items-center gap-2
+                      rounded-2xl
+                      border border-neutral-200
+                      bg-white
+                      px-4 py-2
+                      text-sm
+                      text-neutral-700
+                      transition
+                      hover:bg-neutral-100
+                    "
+                  >
+
+                    {copiedId ===
+                    'live' ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+
+                    {copiedId ===
+                    'live'
+                      ? 'Copied'
+                      : 'Copy'}
                   </button>
                 </div>
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-blush-900">
+
+                <pre
+                  className="
+                    whitespace-pre-wrap
+                    font-sans text-sm
+                    leading-8
+                    text-neutral-800
+                  "
+                >
                   {output}
                 </pre>
               </motion.div>
@@ -210,34 +717,171 @@ export default function AIMessagesPage() {
         </div>
 
         {/* History */}
-        <div className="card-pink">
-          <h3 className="mb-3 text-lg font-bold text-blush-900">Recent generations</h3>
-          {history.length === 0 ? (
-            <p className="text-sm text-blush-500">Your generated messages appear here.</p>
+
+        <div
+          className="
+            rounded-[32px]
+            border border-neutral-200
+            bg-white
+            p-7
+          "
+        >
+
+          <div>
+
+            <div
+              className="
+                text-sm
+                text-neutral-500
+              "
+            >
+              History
+            </div>
+
+            <h2
+              className="
+                mt-1 text-2xl
+                font-semibold
+                tracking-tight
+                text-neutral-950
+              "
+            >
+              Recent drafts
+            </h2>
+          </div>
+
+          {history.length ===
+          0 ? (
+            <div
+              className="
+                mt-6 rounded-3xl
+                border border-dashed
+                border-neutral-300
+                bg-neutral-50
+                p-6
+              "
+            >
+
+              <p
+                className="
+                  text-sm
+                  leading-7
+                  text-neutral-500
+                "
+              >
+                Generated messages
+                will appear here once
+                outreach drafts are
+                created.
+              </p>
+            </div>
           ) : (
-            <ul className="space-y-3">
-              {history.map((m) => (
-                <li
-                  key={m.id}
-                  className="rounded-xl border border-blush-100 bg-white/70 p-3 transition hover:border-blush-300"
-                >
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="badge-pink">{m.kind.replace('_', ' ')}</span>
-                    <button
-                      onClick={() => copy(m.output, m.id)}
-                      className="rounded-full p-1 text-blush-500 hover:bg-blush-100 hover:text-blush-700"
+            <div className="mt-6 space-y-4">
+
+              {history.map(
+                (
+                  message
+                ) => (
+                  <div
+                    key={
+                      message.id
+                    }
+                    className="
+                      rounded-3xl
+                      border border-neutral-200
+                      bg-neutral-50
+                      p-5
+                    "
+                  >
+
+                    <div
+                      className="
+                        flex items-start
+                        justify-between
+                        gap-3
+                      "
                     >
-                      {copiedId === m.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    </button>
+
+                      <div
+                        className="
+                          rounded-full
+                          border border-neutral-200
+                          bg-white
+                          px-3 py-1
+                          text-xs
+                          font-medium
+                          text-neutral-700
+                        "
+                      >
+                        {message.kind.replace(
+                          '_',
+                          ' '
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          copy(
+                            message.output,
+                            message.id
+                          )
+                        }
+                        className="
+                          rounded-xl
+                          p-2
+                          text-neutral-500
+                          transition
+                          hover:bg-white
+                          hover:text-neutral-900
+                        "
+                      >
+
+                        {copiedId ===
+                        message.id ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+
+                    <p
+                      className="
+                        mt-4 line-clamp-5
+                        text-sm
+                        leading-7
+                        text-neutral-700
+                      "
+                    >
+                      {message.output}
+                    </p>
+
+                    <div
+                      className="
+                        mt-5 flex
+                        items-center
+                        justify-between
+                        text-xs
+                        text-neutral-500
+                      "
+                    >
+
+                      <span>
+                        {message.lead
+                          ?.fullName ??
+                          'Manual draft'}
+                      </span>
+
+                      <span>
+                        {timeAgo(
+                          message.createdAt
+                        )}
+                      </span>
+                    </div>
                   </div>
-                  <p className="line-clamp-3 text-sm text-blush-800">{m.output}</p>
-                  <div className="mt-1 flex items-center justify-between text-xs text-blush-500">
-                    <span>{m.lead?.fullName ?? 'No lead linked'}</span>
-                    <span>{timeAgo(m.createdAt)}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                )
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -245,13 +889,43 @@ export default function AIMessagesPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-blush-700">
+
+      <div
+        className="
+          mb-2 text-sm
+          font-medium
+          text-neutral-700
+        "
+      >
         {label}
-      </span>
+      </div>
+
       {children}
     </label>
   );
 }
+
+const inputClass = `
+  h-12 w-full
+  rounded-2xl
+  border border-neutral-200
+  bg-neutral-50
+  px-4
+  text-sm
+  text-neutral-900
+  outline-none
+  transition
+  placeholder:text-neutral-400
+  focus:border-neutral-300
+  focus:bg-white
+`;

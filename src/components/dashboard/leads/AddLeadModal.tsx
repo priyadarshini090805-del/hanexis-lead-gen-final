@@ -1,32 +1,59 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus } from 'lucide-react';
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  AnimatePresence,
+  motion,
+} from 'framer-motion';
+
+import {
+  X,
+  Plus,
+  Loader2,
+} from 'lucide-react';
 
 interface AddLeadModalProps {
   open: boolean;
+
   onClose: () => void;
+
   onCreated?: () => void;
 }
+
+const initialForm = {
+  fullName: '',
+  email: '',
+  company: '',
+  jobTitle: '',
+  linkedinUrl: '',
+  instagramUrl: '',
+  bio: '',
+  tags: '',
+};
 
 export function AddLeadModal({
   open,
   onClose,
   onCreated,
 }: AddLeadModalProps) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    company: '',
-    jobTitle: '',
-    linkedinUrl: '',
-    instagramUrl: '',
-    bio: '',
-    tags: '',
-  });
+  const [error, setError] =
+    useState('');
+
+  const [form, setForm] =
+    useState(initialForm);
+
+  useEffect(() => {
+    if (!open) {
+      setError('');
+    }
+  }, [open]);
 
   async function handleSubmit(
     e: React.FormEvent
@@ -36,43 +63,57 @@ export function AddLeadModal({
     try {
       setLoading(true);
 
-      const res = await fetch('/api/leads', {
-        method: 'POST',
+      setError('');
 
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response =
+        await fetch(
+          '/api/leads',
+          {
+            method: 'POST',
 
-        body: JSON.stringify({
-          ...form,
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
 
-          tags: form.tags
-            .split(',')
-            .map((tag) => tag.trim())
-            .filter(Boolean),
-        }),
-      });
+            body: JSON.stringify(
+              {
+                ...form,
 
-      if (!res.ok) {
-        throw new Error('Failed to create lead');
+                tags:
+                  form.tags
+                    .split(',')
+                    .map(
+                      (
+                        tag
+                      ) =>
+                        tag.trim()
+                    )
+                    .filter(
+                      Boolean
+                    ),
+              }
+            ),
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'Unable to create lead'
+        );
       }
+
+      setForm(initialForm);
 
       onCreated?.();
 
       onClose();
+    } catch (err) {
+      console.error(err);
 
-      setForm({
-        fullName: '',
-        email: '',
-        company: '',
-        jobTitle: '',
-        linkedinUrl: '',
-        instagramUrl: '',
-        bio: '',
-        tags: '',
-      });
-    } catch (error) {
-      console.error(error);
+      setError(
+        'Something went wrong while creating the lead.'
+      );
     } finally {
       setLoading(false);
     }
@@ -80,6 +121,7 @@ export function AddLeadModal({
 
   return (
     <AnimatePresence>
+
       {open && (
         <motion.div
           initial={{
@@ -92,22 +134,20 @@ export function AddLeadModal({
             opacity: 0,
           }}
           className="
-            fixed
-            inset-0
-            z-50
-            flex
-            items-center
+            fixed inset-0 z-50
+            flex items-center
             justify-center
-            bg-black/40
+            bg-black/30
             p-4
             backdrop-blur-sm
           "
         >
+
           <motion.div
             initial={{
               opacity: 0,
-              scale: 0.95,
-              y: 20,
+              scale: 0.98,
+              y: 10,
             }}
             animate={{
               opacity: 1,
@@ -116,51 +156,81 @@ export function AddLeadModal({
             }}
             exit={{
               opacity: 0,
-              scale: 0.95,
+              scale: 0.98,
+              y: 10,
             }}
             transition={{
-              duration: 0.2,
+              duration: 0.18,
             }}
             className="
-              w-full
-              max-w-2xl
+              w-full max-w-3xl
               overflow-hidden
-              rounded-3xl
+              rounded-[32px]
+              border border-neutral-200
               bg-white
               shadow-2xl
             "
           >
+
             {/* Header */}
 
             <div
               className="
-                flex
-                items-center
+                flex items-start
                 justify-between
-                border-b
-                border-gray-100
-                px-6
-                py-5
+                border-b border-neutral-200
+                px-7 py-6
               "
             >
+
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Add New Lead
+
+                <div
+                  className="
+                    text-sm
+                    text-neutral-500
+                  "
+                >
+                  Lead creation
+                </div>
+
+                <h2
+                  className="
+                    mt-1 text-3xl
+                    font-semibold
+                    tracking-tight
+                    text-neutral-950
+                  "
+                >
+                  Add new lead
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Create and manage high-quality outreach leads.
+                <p
+                  className="
+                    mt-3 max-w-lg
+                    text-sm leading-7
+                    text-neutral-500
+                  "
+                >
+                  Create a new prospect profile
+                  and organize outreach details
+                  for future engagement.
                 </p>
               </div>
 
               <button
                 onClick={onClose}
                 className="
-                  rounded-xl
-                  p-2
-                  text-gray-500
+                  flex h-11 w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  border border-neutral-200
+                  bg-white
+                  text-neutral-500
                   transition
-                  hover:bg-gray-100
+                  hover:bg-neutral-100
+                  hover:text-neutral-900
                 "
               >
                 <X className="h-5 w-5" />
@@ -170,143 +240,264 @@ export function AddLeadModal({
             {/* Form */}
 
             <form
-              onSubmit={handleSubmit}
-              className="space-y-5 p-6"
+              onSubmit={
+                handleSubmit
+              }
+              className="
+                space-y-7
+                px-7 py-7
+              "
             >
-              <div className="grid gap-5 md:grid-cols-2">
-                <Field label="Full Name">
+
+              {/* Grid */}
+
+              <div
+                className="
+                  grid gap-5
+                  md:grid-cols-2
+                "
+              >
+
+                <Field label="Full name">
+
                   <input
                     required
-                    value={form.fullName}
-                    onChange={(e) =>
+                    value={
+                      form.fullName
+                    }
+                    onChange={(
+                      e
+                    ) =>
                       setForm({
                         ...form,
-                        fullName: e.target.value,
+                        fullName:
+                          e.target
+                            .value,
                       })
                     }
-                    className={inputClass}
+                    className={
+                      inputClass
+                    }
                     placeholder="Sarah Johnson"
                   />
                 </Field>
 
-                <Field label="Email">
+                <Field label="Email address">
+
                   <input
                     type="email"
-                    value={form.email}
-                    onChange={(e) =>
+                    value={
+                      form.email
+                    }
+                    onChange={(
+                      e
+                    ) =>
                       setForm({
                         ...form,
-                        email: e.target.value,
+                        email:
+                          e.target
+                            .value,
                       })
                     }
-                    className={inputClass}
+                    className={
+                      inputClass
+                    }
                     placeholder="sarah@company.com"
                   />
                 </Field>
 
                 <Field label="Company">
+
                   <input
-                    value={form.company}
-                    onChange={(e) =>
+                    value={
+                      form.company
+                    }
+                    onChange={(
+                      e
+                    ) =>
                       setForm({
                         ...form,
-                        company: e.target.value,
+                        company:
+                          e.target
+                            .value,
                       })
                     }
-                    className={inputClass}
-                    placeholder="TechFlow AI"
+                    className={
+                      inputClass
+                    }
+                    placeholder="TechFlow"
                   />
                 </Field>
 
-                <Field label="Job Title">
+                <Field label="Job title">
+
                   <input
-                    value={form.jobTitle}
-                    onChange={(e) =>
+                    value={
+                      form.jobTitle
+                    }
+                    onChange={(
+                      e
+                    ) =>
                       setForm({
                         ...form,
-                        jobTitle: e.target.value,
+                        jobTitle:
+                          e.target
+                            .value,
                       })
                     }
-                    className={inputClass}
+                    className={
+                      inputClass
+                    }
                     placeholder="Marketing Director"
                   />
                 </Field>
 
                 <Field label="LinkedIn URL">
+
                   <input
-                    value={form.linkedinUrl}
-                    onChange={(e) =>
+                    value={
+                      form.linkedinUrl
+                    }
+                    onChange={(
+                      e
+                    ) =>
                       setForm({
                         ...form,
-                        linkedinUrl: e.target.value,
+                        linkedinUrl:
+                          e.target
+                            .value,
                       })
                     }
-                    className={inputClass}
+                    className={
+                      inputClass
+                    }
                     placeholder="https://linkedin.com/in/..."
                   />
                 </Field>
 
                 <Field label="Instagram URL">
+
                   <input
-                    value={form.instagramUrl}
-                    onChange={(e) =>
+                    value={
+                      form.instagramUrl
+                    }
+                    onChange={(
+                      e
+                    ) =>
                       setForm({
                         ...form,
-                        instagramUrl: e.target.value,
+                        instagramUrl:
+                          e.target
+                            .value,
                       })
                     }
-                    className={inputClass}
+                    className={
+                      inputClass
+                    }
                     placeholder="https://instagram.com/..."
                   />
                 </Field>
               </div>
 
+              {/* Tags */}
+
               <Field label="Tags">
+
                 <input
-                  value={form.tags}
-                  onChange={(e) =>
+                  value={
+                    form.tags
+                  }
+                  onChange={(
+                    e
+                  ) =>
                     setForm({
                       ...form,
-                      tags: e.target.value,
+                      tags:
+                        e.target
+                          .value,
                     })
                   }
-                  className={inputClass}
-                  placeholder="startup, saas, ai"
+                  className={
+                    inputClass
+                  }
+                  placeholder="startup, saas, outbound"
+                />
+
+                <p
+                  className="
+                    mt-2 text-xs
+                    text-neutral-400
+                  "
+                >
+                  Separate tags using commas.
+                </p>
+              </Field>
+
+              {/* Notes */}
+
+              <Field label="Notes">
+
+                <textarea
+                  rows={5}
+                  value={form.bio}
+                  onChange={(
+                    e
+                  ) =>
+                    setForm({
+                      ...form,
+                      bio: e.target
+                        .value,
+                    })
+                  }
+                  className={`
+                    ${inputClass}
+                    resize-none
+                  `}
+                  placeholder="Add context, conversation notes, or qualification details..."
                 />
               </Field>
 
-              <Field label="Bio / Notes">
-                <textarea
-                  rows={4}
-                  value={form.bio}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      bio: e.target.value,
-                    })
-                  }
-                  className={`${inputClass} resize-none`}
-                  placeholder="Short lead summary..."
-                />
-              </Field>
+              {/* Error */}
+
+              {error && (
+                <div
+                  className="
+                    rounded-2xl
+                    border border-red-200
+                    bg-red-50
+                    px-4 py-3
+                    text-sm
+                    text-red-700
+                  "
+                >
+                  {error}
+                </div>
+              )}
 
               {/* Footer */}
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div
+                className="
+                  flex flex-col-reverse
+                  gap-3 border-t
+                  border-neutral-200
+                  pt-6 sm:flex-row
+                  sm:items-center
+                  sm:justify-end
+                "
+              >
+
                 <button
                   type="button"
                   onClick={onClose}
                   className="
-                    rounded-2xl
-                    border
-                    border-gray-200
+                    h-12 rounded-2xl
+                    border border-neutral-200
                     px-5
-                    py-3
-                    text-sm
-                    font-medium
-                    text-gray-600
+                    text-sm font-medium
+                    text-neutral-700
                     transition
-                    hover:bg-gray-100
+                    hover:bg-neutral-100
                   "
                 >
                   Cancel
@@ -316,29 +507,35 @@ export function AddLeadModal({
                   type="submit"
                   disabled={loading}
                   className="
-                    inline-flex
+                    inline-flex h-12
                     items-center
-                    gap-2
-                    rounded-2xl
-                    bg-gradient-to-r
-                    from-violet-600
-                    to-fuchsia-600
+                    justify-center
+                    gap-2 rounded-2xl
+                    bg-neutral-950
                     px-5
-                    py-3
-                    text-sm
-                    font-semibold
+                    text-sm font-medium
                     text-white
-                    shadow-lg
                     transition
-                    hover:scale-[1.02]
-                    disabled:opacity-50
+                    hover:bg-black
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
                   "
                 >
-                  <Plus className="h-4 w-4" />
+
+                  {loading ? (
+                    <Loader2
+                      className="
+                        h-4 w-4
+                        animate-spin
+                      "
+                    />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
 
                   {loading
-                    ? 'Creating...'
-                    : 'Create Lead'}
+                    ? 'Creating lead...'
+                    : 'Create lead'}
                 </button>
               </div>
             </form>
@@ -350,22 +547,18 @@ export function AddLeadModal({
 }
 
 const inputClass = `
-  w-full
+  h-12 w-full
   rounded-2xl
-  border
-  border-gray-200
-  bg-gray-50
+  border border-neutral-200
+  bg-neutral-50
   px-4
-  py-3
   text-sm
-  text-gray-800
+  text-neutral-900
   outline-none
-  transition-all
-  placeholder:text-gray-400
-  focus:border-violet-300
+  transition
+  placeholder:text-neutral-400
+  focus:border-neutral-300
   focus:bg-white
-  focus:ring-4
-  focus:ring-violet-100
 `;
 
 function Field({
@@ -373,13 +566,21 @@ function Field({
   children,
 }: {
   label: string;
+
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-semibold text-gray-700">
+
+      <div
+        className="
+          mb-2 text-sm
+          font-medium
+          text-neutral-700
+        "
+      >
         {label}
-      </span>
+      </div>
 
       {children}
     </label>

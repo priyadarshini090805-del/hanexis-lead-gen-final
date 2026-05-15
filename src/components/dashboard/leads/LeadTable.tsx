@@ -1,41 +1,79 @@
 'use client';
 
 import { motion } from 'framer-motion';
+
 import {
   Mail,
   Building2,
   Linkedin,
   Instagram,
-  Sparkles,
+  ArrowUpRight,
 } from 'lucide-react';
 
 import type { LeadView } from '@/stores/useLeadsStore';
 
 interface LeadTableProps {
   leads: LeadView[];
-  onSelectLead?: (lead: LeadView) => void;
+
+  onSelectLead?: (
+    lead: LeadView
+  ) => void;
 }
 
-function getStatusColor(status: string) {
+function getStatusStyles(
+  status: string
+) {
   switch (status) {
     case 'NEW':
-      return 'bg-sky-100 text-sky-700 border-sky-200';
+      return `
+        bg-neutral-100
+        text-neutral-700
+      `;
 
     case 'CONTACTED':
-      return 'bg-amber-100 text-amber-700 border-amber-200';
+      return `
+        bg-amber-100
+        text-amber-700
+      `;
 
     case 'RESPONDED':
-      return 'bg-violet-100 text-violet-700 border-violet-200';
+      return `
+        bg-blue-100
+        text-blue-700
+      `;
 
     case 'CONVERTED':
-      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      return `
+        bg-emerald-100
+        text-emerald-700
+      `;
 
     case 'ARCHIVED':
-      return 'bg-gray-100 text-gray-600 border-gray-200';
+      return `
+        bg-neutral-200
+        text-neutral-600
+      `;
 
     default:
-      return 'bg-gray-100 text-gray-700 border-gray-200';
+      return `
+        bg-neutral-100
+        text-neutral-700
+      `;
   }
+}
+
+function initials(
+  value: string
+) {
+  return value
+    .split(' ')
+    .map(
+      (part) =>
+        part[0]
+    )
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 export function LeadTable({
@@ -46,244 +84,504 @@ export function LeadTable({
     <div
       className="
         overflow-hidden
-        rounded-3xl
-        border
-        border-gray-200
+        rounded-[30px]
+        border border-neutral-200
         bg-white
-        shadow-sm
       "
     >
+
       {/* Header */}
 
       <div
         className="
-          flex
-          items-center
-          justify-between
-          border-b
-          border-gray-100
-          px-6
-          py-5
+          flex flex-col gap-4
+          border-b border-neutral-200
+          px-7 py-6
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
         "
       >
-        <div>
-          <h2 className="text-lg font-bold text-gray-900">
-            Lead Pipeline
-          </h2>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Manage, qualify and personalize outreach.
-          </p>
+        <div>
+
+          <div
+            className="
+              text-sm
+              text-neutral-500
+            "
+          >
+            Leads
+          </div>
+
+          <h2
+            className="
+              mt-1 text-2xl
+              font-semibold
+              tracking-tight
+              text-neutral-950
+            "
+          >
+            Pipeline contacts
+          </h2>
         </div>
 
         <div
           className="
-            rounded-2xl
-            bg-violet-50
-            px-3
-            py-1.5
+            inline-flex items-center
+            rounded-full
+            bg-neutral-100
+            px-4 py-2
             text-sm
-            font-semibold
-            text-violet-700
+            font-medium
+            text-neutral-700
           "
         >
-          {leads.length} Leads
+          {leads.length} total
         </div>
       </div>
 
       {/* Table */}
 
       <div className="overflow-x-auto">
+
         <table className="min-w-full">
-          <thead className="bg-gray-50">
-            <tr className="text-left">
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Lead
+
+          <thead>
+
+            <tr
+              className="
+                border-b
+                border-neutral-200
+                bg-neutral-50
+              "
+            >
+
+              <th
+                className="
+                  px-7 py-4
+                  text-left text-xs
+                  font-medium
+                  uppercase
+                  tracking-[0.12em]
+                  text-neutral-500
+                "
+              >
+                Contact
               </th>
 
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th
+                className="
+                  px-7 py-4
+                  text-left text-xs
+                  font-medium
+                  uppercase
+                  tracking-[0.12em]
+                  text-neutral-500
+                "
+              >
                 Company
               </th>
 
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th
+                className="
+                  px-7 py-4
+                  text-left text-xs
+                  font-medium
+                  uppercase
+                  tracking-[0.12em]
+                  text-neutral-500
+                "
+              >
                 Status
               </th>
 
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th
+                className="
+                  px-7 py-4
+                  text-left text-xs
+                  font-medium
+                  uppercase
+                  tracking-[0.12em]
+                  text-neutral-500
+                "
+              >
                 Score
               </th>
 
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th
+                className="
+                  px-7 py-4
+                  text-left text-xs
+                  font-medium
+                  uppercase
+                  tracking-[0.12em]
+                  text-neutral-500
+                "
+              >
                 Tags
               </th>
             </tr>
           </thead>
 
           <tbody>
-            {leads.map((lead, index) => (
-              <motion.tr
-                key={lead.id}
-                initial={{
-                  opacity: 0,
-                  y: 10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: index * 0.03,
-                }}
-                onClick={() =>
-                  onSelectLead?.(lead)
-                }
-                className="
-                  cursor-pointer
-                  border-b
-                  border-gray-100
-                  transition-all
-                  hover:bg-violet-50/40
-                "
-              >
-                {/* Lead */}
 
-                <td className="px-6 py-5">
-                  <div className="flex items-start gap-4">
+            {leads.map(
+              (
+                lead,
+                index
+              ) => (
+                <motion.tr
+                  key={lead.id}
+                  initial={{
+                    opacity: 0,
+                    y: 6,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    delay:
+                      index *
+                      0.025,
+                  }}
+                  onClick={() =>
+                    onSelectLead?.(
+                      lead
+                    )
+                  }
+                  className="
+                    group cursor-pointer
+                    border-b
+                    border-neutral-100
+                    transition-colors
+                    hover:bg-neutral-50
+                  "
+                >
+
+                  {/* Contact */}
+
+                  <td className="px-7 py-5">
+
                     <div
                       className="
-                        flex
-                        h-11
-                        w-11
-                        items-center
-                        justify-center
-                        rounded-2xl
-                        bg-gradient-to-br
-                        from-violet-500
-                        to-fuchsia-500
-                        text-sm
-                        font-bold
-                        text-white
-                        shadow-sm
+                        flex items-start
+                        gap-4
                       "
                     >
-                      {lead.fullName
-                        .split(' ')
-                        .map((part) => part[0])
-                        .join('')
-                        .slice(0, 2)}
-                    </div>
 
-                    <div>
-                      <div className="font-semibold text-gray-900">
-                        {lead.fullName}
+                      <div
+                        className="
+                          flex h-11 w-11
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-2xl
+                          bg-neutral-900
+                          text-sm
+                          font-semibold
+                          text-white
+                        "
+                      >
+                        {initials(
+                          lead.fullName
+                        )}
                       </div>
 
-                      {lead.jobTitle && (
-                        <div className="mt-0.5 text-sm text-gray-500">
-                          {lead.jobTitle}
-                        </div>
-                      )}
+                      <div
+                        className="
+                          min-w-0
+                        "
+                      >
 
-                      <div className="mt-2 flex flex-wrap items-center gap-3">
-                        {lead.email && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <Mail className="h-3.5 w-3.5" />
-                            {lead.email}
+                        <div
+                          className="
+                            flex items-center
+                            gap-2
+                          "
+                        >
+
+                          <div
+                            className="
+                              truncate
+                              text-sm
+                              font-medium
+                              text-neutral-950
+                            "
+                          >
+                            {
+                              lead.fullName
+                            }
+                          </div>
+
+                          <ArrowUpRight
+                            className="
+                              h-3.5 w-3.5
+                              opacity-0
+                              transition
+                              group-hover:opacity-100
+                            "
+                          />
+                        </div>
+
+                        {lead.jobTitle && (
+                          <div
+                            className="
+                              mt-1 text-sm
+                              text-neutral-500
+                            "
+                          >
+                            {
+                              lead.jobTitle
+                            }
                           </div>
                         )}
 
-                        {lead.linkedinUrl && (
-                          <Linkedin className="h-3.5 w-3.5 text-sky-600" />
-                        )}
-
-                        {lead.instagramUrl && (
-                          <Instagram className="h-3.5 w-3.5 text-pink-500" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                {/* Company */}
-
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-gray-400" />
-
-                    <div>
-                      <div className="font-medium text-gray-800">
-                        {lead.company || 'Unknown'}
-                      </div>
-
-                      <div className="text-xs text-gray-500">
-                        {lead.source}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                {/* Status */}
-
-                <td className="px-6 py-5">
-                  <div
-                    className={`
-                      inline-flex
-                      items-center
-                      rounded-full
-                      border
-                      px-3
-                      py-1
-                      text-xs
-                      font-semibold
-                      ${getStatusColor(lead.status)}
-                    `}
-                  >
-                    {lead.status}
-                  </div>
-                </td>
-
-                {/* Score */}
-
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-violet-500" />
-
-                    <span className="font-semibold text-gray-800">
-                      {lead.score}/100
-                    </span>
-                  </div>
-                </td>
-
-                {/* Tags */}
-
-                <td className="px-6 py-5">
-                  <div className="flex flex-wrap gap-2">
-                    {lead.tags?.length ? (
-                      lead.tags.map((tag) => (
                         <div
-                          key={tag.id}
                           className="
-                            rounded-full
-                            bg-gray-100
-                            px-3
-                            py-1
-                            text-xs
-                            font-medium
-                            text-gray-600
+                            mt-3 flex
+                            flex-wrap
+                            items-center
+                            gap-3
                           "
                         >
-                          {tag.label}
+
+                          {lead.email && (
+                            <div
+                              className="
+                                flex items-center
+                                gap-1.5 text-xs
+                                text-neutral-500
+                              "
+                            >
+                              <Mail className="h-3.5 w-3.5" />
+
+                              {
+                                lead.email
+                              }
+                            </div>
+                          )}
+
+                          {lead.linkedinUrl && (
+                            <a
+                              href={
+                                lead.linkedinUrl
+                              }
+                              target="_blank"
+                              rel="noreferrer"
+                              className="
+                                text-neutral-400
+                                transition
+                                hover:text-neutral-900
+                              "
+                              onClick={(
+                                e
+                              ) =>
+                                e.stopPropagation()
+                              }
+                            >
+                              <Linkedin className="h-4 w-4" />
+                            </a>
+                          )}
+
+                          {lead.instagramUrl && (
+                            <a
+                              href={
+                                lead.instagramUrl
+                              }
+                              target="_blank"
+                              rel="noreferrer"
+                              className="
+                                text-neutral-400
+                                transition
+                                hover:text-neutral-900
+                              "
+                              onClick={(
+                                e
+                              ) =>
+                                e.stopPropagation()
+                              }
+                            >
+                              <Instagram className="h-4 w-4" />
+                            </a>
+                          )}
                         </div>
-                      ))
-                    ) : (
-                      <span className="text-sm text-gray-400">
-                        No tags
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Company */}
+
+                  <td className="px-7 py-5">
+
+                    <div
+                      className="
+                        flex items-center
+                        gap-3
+                      "
+                    >
+
+                      <div
+                        className="
+                          flex h-10 w-10
+                          items-center
+                          justify-center
+                          rounded-2xl
+                          bg-neutral-100
+                        "
+                      >
+                        <Building2
+                          className="
+                            h-4 w-4
+                            text-neutral-600
+                          "
+                        />
+                      </div>
+
+                      <div>
+
+                        <div
+                          className="
+                            text-sm
+                            font-medium
+                            text-neutral-900
+                          "
+                        >
+                          {lead.company ||
+                            'Unknown'}
+                        </div>
+
+                        <div
+                          className="
+                            mt-1 text-xs
+                            uppercase
+                            tracking-wide
+                            text-neutral-400
+                          "
+                        >
+                          {lead.source}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Status */}
+
+                  <td className="px-7 py-5">
+
+                    <div
+                      className={`
+                        inline-flex
+                        items-center
+                        rounded-full
+                        px-3 py-1.5
+                        text-xs
+                        font-medium
+                        ${getStatusStyles(
+                          lead.status
+                        )}
+                      `}
+                    >
+                      {lead.status}
+                    </div>
+                  </td>
+
+                  {/* Score */}
+
+                  <td className="px-7 py-5">
+
+                    <div
+                      className="
+                        flex items-center
+                        gap-3
+                      "
+                    >
+
+                      <div
+                        className="
+                          relative h-2
+                          w-24 overflow-hidden
+                          rounded-full
+                          bg-neutral-200
+                        "
+                      >
+
+                        <div
+                          className="
+                            absolute left-0 top-0
+                            h-full rounded-full
+                            bg-neutral-900
+                          "
+                          style={{
+                            width: `${lead.score}%`,
+                          }}
+                        />
+                      </div>
+
+                      <span
+                        className="
+                          text-sm
+                          font-medium
+                          text-neutral-700
+                        "
+                      >
+                        {lead.score}
                       </span>
-                    )}
-                  </div>
-                </td>
-              </motion.tr>
-            ))}
+                    </div>
+                  </td>
+
+                  {/* Tags */}
+
+                  <td className="px-7 py-5">
+
+                    <div
+                      className="
+                        flex flex-wrap
+                        gap-2
+                      "
+                    >
+
+                      {lead.tags?.length ? (
+                        lead.tags.map(
+                          (
+                            tag
+                          ) => (
+                            <div
+                              key={
+                                tag.id
+                              }
+                              className="
+                                rounded-full
+                                border
+                                border-neutral-200
+                                bg-neutral-50
+                                px-3 py-1
+                                text-xs
+                                text-neutral-600
+                              "
+                            >
+                              {
+                                tag.label
+                              }
+                            </div>
+                          )
+                        )
+                      ) : (
+                        <span
+                          className="
+                            text-sm
+                            text-neutral-400
+                          "
+                        >
+                          No tags
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                </motion.tr>
+              )
+            )}
           </tbody>
         </table>
       </div>
