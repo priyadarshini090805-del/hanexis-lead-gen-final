@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 import {
@@ -33,7 +34,14 @@ export default function LeadsPage() {
     leads,
     loading,
     fetchLeads,
-    removeLead,
+
+    q,
+    statusFilter,
+    sourceFilter,
+
+    setQuery,
+    setStatusFilter,
+    setSourceFilter,
   } = useLeadsStore();
 
   const [drawerId, setDrawerId] =
@@ -93,22 +101,56 @@ export default function LeadsPage() {
 
       {/* Header */}
 
-      <section className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+      <section
+        className="
+          flex flex-col gap-5
+          xl:flex-row
+          xl:items-end
+          xl:justify-between
+        "
+      >
 
         <div>
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+          <div
+            className="
+              inline-flex items-center gap-2
+              rounded-full
+              border border-violet-200
+              bg-violet-50
+              px-3 py-1
+              text-xs font-semibold
+              text-violet-700
+            "
+          >
             <Sparkles className="h-3.5 w-3.5" />
+
             AI-Powered Lead Intelligence
           </div>
 
-          <h1 className="mt-4 text-4xl font-bold tracking-tight text-gray-950">
+          <h1
+            className="
+              mt-4 text-4xl
+              font-bold
+              tracking-tight
+              text-gray-950
+            "
+          >
             Lead Pipeline
           </h1>
 
-          <p className="mt-2 max-w-2xl text-base leading-7 text-gray-500">
-            Manage relationships, track engagement,
-            and generate contextual outreach with
+          <p
+            className="
+              mt-2 max-w-2xl
+              text-base
+              leading-7
+              text-gray-500
+            "
+          >
+            Manage relationships,
+            track engagement,
+            and generate contextual
+            outreach with
             AI-assisted lead operations.
           </p>
         </div>
@@ -122,6 +164,7 @@ export default function LeadsPage() {
             className="btn-secondary"
           >
             <Upload className="h-4 w-4" />
+
             Import CSV
           </button>
 
@@ -132,14 +175,21 @@ export default function LeadsPage() {
             className="btn-primary"
           >
             <Plus className="h-4 w-4" />
+
             Add Lead
           </button>
         </div>
       </section>
 
-      {/* Metrics */}
+      {/* Stats */}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section
+        className="
+          grid gap-4
+          md:grid-cols-2
+          xl:grid-cols-4
+        "
+      >
 
         <LeadStats
           title="Total Leads"
@@ -172,27 +222,41 @@ export default function LeadsPage() {
 
       {/* Filters */}
 
-      <LeadFilters />
+      <LeadFilters
+        query={q}
+        status={statusFilter}
+        source={sourceFilter}
+        onQueryChange={setQuery}
+        onStatusChange={setStatusFilter}
+        onSourceChange={setSourceFilter}
+      />
 
       {/* Table */}
 
       <motion.section
         layout
-        className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
+        className="
+          overflow-hidden
+          rounded-3xl
+          border border-gray-200
+          bg-white
+          shadow-sm
+        "
       >
+
         {leads.length === 0 &&
         !loading ? (
           <LeadEmptyState
-            onAdd={() =>
+            onAddLead={() =>
               setShowAdd(true)
             }
           />
         ) : (
           <LeadTable
-            onOpen={(id) =>
-              setDrawerId(id)
+            leads={leads}
+            onSelectLead={(lead) =>
+              setDrawerId(lead.id)
             }
-            onDelete={removeLead}
           />
         )}
       </motion.section>
@@ -203,16 +267,24 @@ export default function LeadsPage() {
 
         {showAdd && (
           <AddLeadModal
+            open={showAdd}
             onClose={() =>
               setShowAdd(false)
+            }
+            onCreated={() =>
+              fetchLeads()
             }
           />
         )}
 
         {showImport && (
           <ImportCsvModal
+            open={showImport}
             onClose={() =>
               setShowImport(false)
+            }
+            onImported={() =>
+              fetchLeads()
             }
           />
         )}
@@ -225,6 +297,7 @@ export default function LeadsPage() {
             }
           />
         )}
+
       </AnimatePresence>
     </div>
   );
