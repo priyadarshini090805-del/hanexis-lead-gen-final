@@ -335,7 +335,7 @@ export function LeadDrawer({
               <InsightCard
                 icon={Brain}
                 title="AI Tone"
-                value={tone}
+                value={tone ?? 'N/A'}
               />
 
               <InsightCard
