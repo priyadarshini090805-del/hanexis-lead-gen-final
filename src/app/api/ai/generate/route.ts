@@ -18,14 +18,14 @@ const schema = z.object({
     'CUSTOM',
   ]),
 
-  tone: z
-    .enum([
-      'friendly',
-      'professional',
-      'casual',
-      'enthusiastic',
-    ])
-    .optional(),
+  tone:
+  z.enum([
+    'FRIENDLY',
+    'PROFESSIONAL',
+    'CASUAL',
+    'ENTHUSIASTIC',
+  ])
+  .optional(),
 
   product: z
     .string()

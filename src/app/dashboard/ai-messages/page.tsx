@@ -53,10 +53,10 @@ const KINDS = [
 ] as const;
 
 const TONES = [
-  'friendly',
-  'professional',
-  'casual',
-  'enthusiastic',
+  'FRIENDLY',
+  'PROFESSIONAL',
+  'CASUAL',
+  'ENTHUSIASTIC',
 ] as const;
 
 interface MessageItem {
@@ -90,7 +90,7 @@ export default function AIMessagesPage() {
   const [tone, setTone] =
     useState<
       (typeof TONES)[number]
-    >('professional');
+    >('PROFESSIONAL');
 
   const [product, setProduct] =
     useState('');
@@ -118,18 +118,24 @@ export default function AIMessagesPage() {
     );
 
   async function loadHistory() {
-    const response =
-      await fetch(
-        '/api/ai/generate'
-      );
+    try {
+      const response =
+        await fetch(
+          '/api/ai/generate'
+        );
 
-    if (response.ok) {
+      if (!response.ok) {
+        return;
+      }
+
       const data =
         await response.json();
 
       setHistory(
-        data.messages
+        data.messages ?? []
       );
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -138,7 +144,7 @@ export default function AIMessagesPage() {
   }, []);
 
   async function generate() {
-    if (!form.fullName) {
+    if (!form.fullName.trim()) {
       toast.error(
         'Recipient name is required'
       );
@@ -167,6 +173,7 @@ export default function AIMessagesPage() {
                 kind,
                 tone,
                 product,
+
                 ephemeralLead:
                   form,
               }
@@ -174,17 +181,22 @@ export default function AIMessagesPage() {
           }
         );
 
-      if (!response.ok) {
-        throw new Error(
-          'Generation failed'
-        );
-      }
-
       const data =
         await response.json();
 
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            'Generation failed'
+        );
+      }
+
       setOutput(
         data.message.output
+      );
+
+      toast.success(
+        'Message generated'
       );
 
       await loadHistory();
@@ -208,6 +220,10 @@ export default function AIMessagesPage() {
     );
 
     setCopiedId(id);
+
+    toast.success(
+      'Copied to clipboard'
+    );
 
     setTimeout(() => {
       setCopiedId(null);
@@ -327,7 +343,7 @@ export default function AIMessagesPage() {
             </div>
           </div>
 
-          {/* Message Type */}
+          {/* Types */}
 
           <div
             className="
@@ -504,10 +520,15 @@ export default function AIMessagesPage() {
                       key={
                         toneOption
                       }
-                    >
-                      {
+                      value={
                         toneOption
                       }
+                    >
+                      {toneOption
+                        .charAt(0) +
+                        toneOption
+                          .slice(1)
+                          .toLowerCase()}
                     </option>
                   )
                 )}
