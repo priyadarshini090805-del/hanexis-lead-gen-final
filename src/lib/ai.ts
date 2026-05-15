@@ -135,6 +135,6 @@ ${promptTemplate ?? 'None'}
     output,
 
     model:
-      'gemini-1.5-flash',
+      'gemini-pro',
   };
 }
