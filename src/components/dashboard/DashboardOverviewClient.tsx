@@ -51,7 +51,7 @@ const item = {
   },
 };
 
-function DashboardOverviewClient({
+export function DashboardOverviewClient({
   totalLeads,
   totalMessages,
   pipelineActivity,
