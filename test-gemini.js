@@ -1,13 +1,29 @@
-const API_KEY = "AIzaSyCrY7aUCGvxVX0eCJ4jETfHc2nFigChG0E";
+require('dotenv').config();
 
-async function listModels() {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`
+const {
+  GoogleGenerativeAI,
+} = require('@google/generative-ai');
+
+const genAI =
+  new GoogleGenerativeAI(
+    process.env.GEMINI_API_KEY
   );
 
-  const data = await res.json();
+async function test() {
+  const model =
+    genAI.getGenerativeModel({
+      model:
+        'gemini-2.0-flash',
+    });
 
-  console.log(JSON.stringify(data, null, 2));
+  const result =
+    await model.generateContent(
+      'Say hello'
+    );
+
+  console.log(
+    result.response.text()
+  );
 }
 
-listModels();
+test();

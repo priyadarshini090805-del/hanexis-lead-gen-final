@@ -1,17 +1,12 @@
-import {
-  GoogleGenerativeAI,
-} from '@google/generative-ai';
+import OpenAI from 'openai';
 
-const genAI =
-  new GoogleGenerativeAI(
-    process.env.GEMINI_API_KEY!
-  );
+const client = new OpenAI({
+  apiKey:
+    process.env.OPENROUTER_API_KEY,
 
-const model =
-  genAI.getGenerativeModel({
-    model:
-      'gemini-2.0-flash',
-  });
+  baseURL:
+    'https://openrouter.ai/api/v1',
+});
 
 export const SEED_PROMPTS = [
   {
@@ -85,56 +80,68 @@ export async function generateMessage({
   promptTemplate,
   lead,
 }: GenerateMessageInput) {
-  const systemPrompt = `
+  const prompt = `
 You are an expert B2B outbound sales assistant.
 
-Generate highly personalized outreach messages.
+Write a highly personalized outreach message.
 
-Rules:
-- Keep message concise
+RULES:
 - Human sounding
+- Short and concise
 - Natural language
-- No hype
 - No emojis
 - No markdown
-- No placeholders
-- Keep under 120 words
-- Tone: ${tone}
+- No fake hype
+- Under 120 words
+
+Tone:
+${tone}
 
 Message Type:
 ${kind}
 
-Lead Details:
+Lead:
 Name: ${lead.fullName}
 Company: ${lead.company ?? 'Unknown'}
 Role: ${lead.jobTitle ?? 'Unknown'}
 Bio: ${lead.bio ?? 'No additional context'}
 
-Product/Service:
+Product:
 ${product ?? 'Not provided'}
 
 Extra Instructions:
 ${promptTemplate ?? 'None'}
 `;
 
-  const result =
-    await model.generateContent(
-      systemPrompt
+  const completion =
+    await client.chat.completions.create(
+      {
+        model:
+          'openai/gpt-3.5-turbo',
+
+        messages: [
+          {
+            role:
+              'user',
+
+            content:
+              prompt,
+          },
+        ],
+      }
     );
 
-  const response =
-    await result.response;
-
   const output =
-    response.text().trim();
+    completion.choices[0]
+      ?.message?.content ??
+    'Unable to generate response';
 
   return {
-    prompt:
-      systemPrompt,
+    prompt,
 
     output,
 
     model:
-      'gemini-2.0-flash',
+      'openrouter-gpt-3.5',
   };
 }
