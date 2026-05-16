@@ -1,10 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import {
+  useMemo,
+  useState,
+} from 'react';
 
 import { signOut } from 'next-auth/react';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AnimatePresence,
+  motion,
+} from 'framer-motion';
 
 import {
   Bell,
@@ -12,12 +18,14 @@ import {
   LogOut,
   Search,
   Command,
+  Sparkles,
 } from 'lucide-react';
 
 import { initials } from '@/lib/utils';
 
 function getGreeting() {
-  const hour = new Date().getHours();
+  const hour =
+    new Date().getHours();
 
   if (hour < 12) {
     return 'Good morning';
@@ -57,14 +65,49 @@ export function Topbar({
     <header
       className="
         sticky top-0 z-40
-        border-b border-neutral-200
-        bg-white/90
-        backdrop-blur-xl
+        border-b border-white/40
+        bg-white/70
+        backdrop-blur-2xl
       "
     >
+
+      {/* Ambient Layer */}
+
       <div
         className="
-          flex h-[76px]
+          pointer-events-none
+          absolute inset-0
+          overflow-hidden
+        "
+      >
+
+        <div
+          className="
+            absolute left-10
+            top-[-120px]
+            h-56 w-56
+            rounded-full
+            bg-violet-200/20
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            absolute right-20
+            top-[-100px]
+            h-56 w-56
+            rounded-full
+            bg-cyan-200/20
+            blur-3xl
+          "
+        />
+      </div>
+
+      <div
+        className="
+          relative z-10
+          flex h-[84px]
           items-center justify-between
           gap-6 px-6
           lg:px-10
@@ -82,65 +125,139 @@ export function Topbar({
 
           {/* Greeting */}
 
-          <div className="min-w-0">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 8,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.4,
+            }}
+            className="min-w-0"
+          >
 
             <div
               className="
-                text-xs
-                font-medium
+                flex items-center
+                gap-2 text-[11px]
+                font-semibold
                 uppercase
-                tracking-[0.16em]
+                tracking-[0.18em]
                 text-neutral-400
               "
             >
+
+              <Sparkles
+                className="
+                  h-3.5 w-3.5
+                "
+              />
+
               Workspace
             </div>
 
             <h1
               className="
-                mt-1 truncate
-                text-[26px]
+                mt-2 truncate
+                text-[30px]
                 font-semibold
                 tracking-tight
-                text-neutral-900
+                text-neutral-950
               "
             >
               {greeting},{' '}
-              {name.split(' ')[0]}
+              <span
+                className="
+                  bg-gradient-to-r
+                  from-neutral-950
+                  to-neutral-500
+                  bg-clip-text
+                  text-transparent
+                "
+              >
+                {name.split(' ')[0]}
+              </span>
             </h1>
-          </div>
+          </motion.div>
 
           {/* Search */}
 
-          <div
+          <motion.div
+            whileHover={{
+              y: -1,
+            }}
+            transition={{
+              duration: 0.18,
+            }}
             className="
               hidden xl:flex
               items-center
             "
           >
+
             <button
               className="
-                flex h-12 w-[360px]
-                items-center justify-between
-                rounded-2xl border
-                border-neutral-200
-                bg-neutral-50
-                px-4 transition-all
-                hover:bg-white
-                hover:shadow-sm
+                group relative
+                flex h-14
+                w-[390px]
+                items-center
+                justify-between
+                overflow-hidden
+                rounded-2xl
+                border border-white/50
+                bg-white/70
+                px-5
+                shadow-sm
+                backdrop-blur-xl
+                transition-all
+                duration-300
+                hover:shadow-xl
               "
             >
+
+              {/* Glow */}
+
               <div
                 className="
-                  flex items-center gap-3
+                  absolute inset-0
+                  bg-gradient-to-r
+                  from-violet-500/5
+                  to-cyan-400/5
+                  opacity-0 transition-opacity
+                  duration-300
+                  group-hover:opacity-100
+                "
+              />
+
+              <div
+                className="
+                  relative z-10
+                  flex items-center
+                  gap-3
                 "
               >
-                <Search
+
+                <div
                   className="
-                    h-4 w-4
-                    text-neutral-400
+                    flex h-9 w-9
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-neutral-100
                   "
-                />
+                >
+
+                  <Search
+                    className="
+                      h-4 w-4
+                      text-neutral-500
+                    "
+                  />
+                </div>
 
                 <span
                   className="
@@ -148,69 +265,114 @@ export function Topbar({
                     text-neutral-500
                   "
                 >
-                  Search leads, templates...
+                  Search leads,
+                  outreach, templates...
                 </span>
               </div>
 
               <div
                 className="
-                  flex items-center gap-1
-                  rounded-lg border
-                  border-neutral-200
-                  bg-white px-2 py-1
-                  text-xs text-neutral-500
+                  relative z-10
+                  flex items-center
+                  gap-1 rounded-xl
+                  border border-neutral-200
+                  bg-white px-2.5
+                  py-1.5 text-xs
+                  text-neutral-500
                 "
               >
-                <Command className="h-3 w-3" />
+
+                <Command
+                  className="
+                    h-3 w-3
+                  "
+                />
+
                 K
               </div>
             </button>
-          </div>
+          </motion.div>
         </div>
 
         {/* Right */}
 
         <div
           className="
-            flex items-center gap-3
+            flex items-center
+            gap-3
           "
         >
 
-          {/* Notification */}
+          {/* Notifications */}
 
-          <button
+          <motion.button
+            whileHover={{
+              y: -2,
+              scale: 1.02,
+            }}
+            whileTap={{
+              scale: 0.96,
+            }}
             className="
-              relative flex h-11 w-11
-              items-center justify-center
-              rounded-2xl border
-              border-neutral-200
-              bg-white transition
-              hover:bg-neutral-50
-              hover:shadow-sm
+              relative flex
+              h-12 w-12
+              items-center
+              justify-center
+              overflow-hidden
+              rounded-2xl
+              border border-white/50
+              bg-white/70
+              shadow-sm
+              backdrop-blur-xl
             "
           >
+
+            <div
+              className="
+                absolute inset-0
+                bg-gradient-to-br
+                from-violet-500/5
+                to-cyan-400/5
+              "
+            />
+
             <Bell
               className="
-                h-4 w-4
+                relative z-10
+                h-4.5 w-4.5
                 text-neutral-700
               "
             />
 
-            <div
+            <motion.div
+              animate={{
+                scale: [1, 1.4, 1],
+                opacity: [1, 0.6, 1],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 2,
+              }}
               className="
-                absolute right-3 top-3
-                h-2 w-2
-                rounded-full
+                absolute right-3
+                top-3 h-2.5
+                w-2.5 rounded-full
                 bg-rose-500
               "
             />
-          </button>
+          </motion.button>
 
           {/* Profile */}
 
           <div className="relative">
 
-            <button
+            <motion.button
+              whileHover={{
+                y: -1,
+              }}
+              whileTap={{
+                scale: 0.98,
+              }}
               onClick={() =>
                 setOpen(
                   (value) =>
@@ -220,13 +382,16 @@ export function Topbar({
               className="
                 flex items-center
                 gap-3 rounded-2xl
-                border border-neutral-200
-                bg-white px-3 py-2
+                border border-white/50
+                bg-white/70 px-3
+                py-2 shadow-sm
+                backdrop-blur-xl
                 transition-all
-                hover:bg-neutral-50
-                hover:shadow-sm
+                duration-300
+                hover:shadow-xl
               "
             >
+
               {/* Avatar */}
 
               {image ? (
@@ -235,7 +400,7 @@ export function Topbar({
                   src={image}
                   alt={name}
                   className="
-                    h-10 w-10
+                    h-11 w-11
                     rounded-2xl
                     object-cover
                   "
@@ -243,15 +408,30 @@ export function Topbar({
               ) : (
                 <div
                   className="
-                    flex h-10 w-10
-                    items-center justify-center
+                    relative flex
+                    h-11 w-11
+                    items-center
+                    justify-center
+                    overflow-hidden
                     rounded-2xl
-                    bg-neutral-900
+                    bg-neutral-950
                     text-sm font-semibold
                     text-white
                   "
                 >
-                  {initials(name)}
+
+                  <div
+                    className="
+                      absolute inset-0
+                      bg-gradient-to-br
+                      from-violet-500/20
+                      to-cyan-400/20
+                    "
+                  />
+
+                  <span className="relative z-10">
+                    {initials(name)}
+                  </span>
                 </div>
               )}
 
@@ -263,10 +443,11 @@ export function Topbar({
                   sm:block
                 "
               >
+
                 <div
                   className="
                     text-sm font-medium
-                    text-neutral-900
+                    text-neutral-950
                   "
                 >
                   {name}
@@ -278,20 +459,33 @@ export function Topbar({
                     text-neutral-500
                   "
                 >
-                  {role === 'ADMIN'
+                  {role ===
+                  'ADMIN'
                     ? 'Administrator'
                     : 'Workspace Member'}
                 </div>
               </div>
 
               <ChevronDown
-                className="
+                className={`
                   hidden h-4 w-4
                   text-neutral-400
+                  transition-transform
+                  duration-300
                   sm:block
-                "
+
+                  ${
+                    open
+                      ? `
+                        rotate-180
+                      `
+                      : ''
+                  }
+                `}
               />
-            </button>
+            </motion.button>
+
+            {/* Dropdown */}
 
             <AnimatePresence>
 
@@ -299,8 +493,8 @@ export function Topbar({
                 <motion.div
                   initial={{
                     opacity: 0,
-                    y: -10,
-                    scale: 0.98,
+                    y: -12,
+                    scale: 0.96,
                   }}
                   animate={{
                     opacity: 1,
@@ -313,134 +507,162 @@ export function Topbar({
                     scale: 0.98,
                   }}
                   transition={{
-                    duration: 0.18,
+                    duration: 0.2,
                   }}
                   className="
-                    absolute right-0 mt-3
-                    w-[300px]
+                    absolute right-0
+                    mt-4 w-[320px]
                     overflow-hidden
-                    rounded-3xl border
-                    border-neutral-200
-                    bg-white
+                    rounded-[28px]
+                    border border-white/50
+                    bg-white/80
                     shadow-2xl
+                    backdrop-blur-2xl
                   "
                 >
 
-                  {/* Header */}
+                  {/* Glow */}
 
                   <div
                     className="
-                      border-b
-                      border-neutral-200
-                      px-5 py-5
+                      absolute inset-0
+                      bg-gradient-to-br
+                      from-violet-500/5
+                      to-cyan-400/5
                     "
-                  >
+                  />
+
+                  <div className="relative z-10">
+
+                    {/* Header */}
+
                     <div
                       className="
-                        flex items-start
-                        gap-4
+                        border-b
+                        border-neutral-200/70
+                        px-6 py-6
                       "
                     >
 
-                      {image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={image}
-                          alt={name}
-                          className="
-                            h-14 w-14
-                            rounded-2xl
-                            object-cover
-                          "
-                        />
-                      ) : (
-                        <div
-                          className="
-                            flex h-14 w-14
-                            items-center
-                            justify-center
-                            rounded-2xl
-                            bg-neutral-900
-                            text-lg font-semibold
-                            text-white
-                          "
-                        >
-                          {initials(name)}
-                        </div>
-                      )}
+                      <div
+                        className="
+                          flex items-start
+                          gap-4
+                        "
+                      >
 
-                      <div className="min-w-0">
+                        {image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={image}
+                            alt={name}
+                            className="
+                              h-16 w-16
+                              rounded-3xl
+                              object-cover
+                            "
+                          />
+                        ) : (
+                          <div
+                            className="
+                              flex h-16 w-16
+                              items-center
+                              justify-center
+                              rounded-3xl
+                              bg-neutral-950
+                              text-lg
+                              font-semibold
+                              text-white
+                            "
+                          >
+                            {initials(name)}
+                          </div>
+                        )}
 
-                        <div
-                          className="
-                            truncate text-base
-                            font-semibold
-                            text-neutral-900
-                          "
-                        >
-                          {name}
-                        </div>
+                        <div className="min-w-0">
 
-                        <div
-                          className="
-                            mt-1 truncate
-                            text-sm
-                            text-neutral-500
-                          "
-                        >
-                          {email}
-                        </div>
+                          <div
+                            className="
+                              truncate
+                              text-lg
+                              font-semibold
+                              text-neutral-950
+                            "
+                          >
+                            {name}
+                          </div>
 
-                        <div
-                          className="
-                            mt-3 inline-flex
-                            items-center
-                            rounded-full
-                            bg-neutral-100
-                            px-3 py-1.5
-                            text-xs
-                            font-medium
-                            text-neutral-700
-                          "
-                        >
-                          {role === 'ADMIN'
-                            ? 'Admin Access'
-                            : 'Standard Access'}
+                          <div
+                            className="
+                              mt-1 truncate
+                              text-sm
+                              text-neutral-500
+                            "
+                          >
+                            {email}
+                          </div>
+
+                          <div
+                            className="
+                              mt-4 inline-flex
+                              items-center
+                              rounded-full
+                              border border-white/60
+                              bg-white/70
+                              px-3 py-1.5
+                              text-xs
+                              font-medium
+                              text-neutral-700
+                            "
+                          >
+                            {role ===
+                            'ADMIN'
+                              ? 'Admin Access'
+                              : 'Standard Access'}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Footer */}
+                    {/* Actions */}
 
-                  <div className="p-3">
+                    <div className="p-3">
 
-                    <button
-                      onClick={() =>
-                        signOut({
-                          callbackUrl:
-                            '/',
-                        })
-                      }
-                      className="
-                        flex w-full
-                        items-center gap-3
-                        rounded-2xl
-                        px-4 py-3
-                        text-left text-sm
-                        text-neutral-700
-                        transition
-                        hover:bg-neutral-100
-                      "
-                    >
-                      <LogOut
+                      <motion.button
+                        whileHover={{
+                          x: 3,
+                        }}
+                        whileTap={{
+                          scale: 0.98,
+                        }}
+                        onClick={() =>
+                          signOut({
+                            callbackUrl:
+                              '/',
+                          })
+                        }
                         className="
-                          h-4 w-4
+                          flex w-full
+                          items-center gap-3
+                          rounded-2xl
+                          px-4 py-3
+                          text-left text-sm
+                          text-neutral-700
+                          transition-all
+                          hover:bg-white
+                          hover:shadow-sm
                         "
-                      />
+                      >
 
-                      Sign out
-                    </button>
+                        <LogOut
+                          className="
+                            h-4 w-4
+                          "
+                        />
+
+                        Sign out
+                      </motion.button>
+                    </div>
                   </div>
                 </motion.div>
               )}

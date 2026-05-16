@@ -1,10 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 
-import { getServerSession } from 'next-auth';
-
-import { authOptions } from '@/lib/auth';
-
-import { prisma } from '@/lib/prisma';
+import { motion } from 'framer-motion';
 
 import {
   ArrowRight,
@@ -12,129 +10,140 @@ import {
   TrendingUp,
   Users,
   Sparkles,
+  Activity,
 } from 'lucide-react';
 
-import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
+interface DashboardOverviewClientProps {
+  totalLeads: number;
 
-import { timeAgo } from '@/lib/utils';
+  totalMessages: number;
 
-export const dynamic = 'force-dynamic';
+  pipelineActivity: number;
 
-export default async function DashboardOverview() {
-  const session =
-    await getServerSession(authOptions);
+  recentLeads: any[];
 
-  const userId =
-    session!.user.id;
+  recentMessages: any[];
+}
 
-  const [
-    totalLeads,
-    totalMessages,
-    recentLeads,
-    recentMessages,
-    byStatus,
-  ] = await Promise.all([
-    prisma.lead.count({
-      where: {
-        ownerId: userId,
-      },
-    }),
+const container = {
+  hidden: {},
 
-    prisma.aiMessage.count({
-      where: {
-        ownerId: userId,
-      },
-    }),
+  show: {
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
 
-    prisma.lead.findMany({
-      where: {
-        ownerId: userId,
-      },
+const item = {
+  hidden: {
+    opacity: 0,
+    y: 16,
+  },
 
-      orderBy: {
-        createdAt: 'desc',
-      },
+  show: {
+    opacity: 1,
+    y: 0,
 
-      take: 5,
+    transition: {
+      duration: 0.45,
+    },
+  },
+};
 
-      include: {
-        tags: true,
-      },
-    }),
-
-    prisma.aiMessage.findMany({
-      where: {
-        ownerId: userId,
-      },
-
-      orderBy: {
-        createdAt: 'desc',
-      },
-
-      take: 5,
-
-      include: {
-        lead: {
-          select: {
-            fullName: true,
-            company: true,
-          },
-        },
-      },
-    }),
-
-    prisma.lead.groupBy({
-      by: ['status'],
-
-      where: {
-        ownerId: userId,
-      },
-
-      _count: {
-        status: true,
-      },
-    }),
-  ]);
-
+export function DashboardOverviewClient({
+  totalLeads,
+  totalMessages,
+  pipelineActivity,
+  recentLeads,
+  recentMessages,
+}: DashboardOverviewClientProps) {
   return (
-    <div className="space-y-8">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
+    >
 
       {/* Hero */}
 
-      <section
+      <motion.section
+        variants={item}
         className="
-          overflow-hidden
-          rounded-[32px]
-          border border-neutral-200
-          bg-white
+          relative overflow-hidden
+          rounded-[38px]
+          border border-white/50
+          bg-white/70
+          shadow-[0_10px_60px_rgba(15,23,42,0.06)]
+          backdrop-blur-2xl
         "
       >
+
+        {/* Ambient */}
+
         <div
           className="
-            px-8 py-10
-            lg:px-12 lg:py-12
+            pointer-events-none
+            absolute inset-0
+            overflow-hidden
           "
         >
 
           <div
             className="
-              max-w-3xl
+              absolute right-[-120px]
+              top-[-120px]
+              h-[320px] w-[320px]
+              rounded-full
+              bg-violet-300/10
+              blur-3xl
             "
-          >
+          />
 
-            <div
+          <div
+            className="
+              absolute left-[-80px]
+              bottom-[-120px]
+              h-[260px] w-[260px]
+              rounded-full
+              bg-cyan-300/10
+              blur-3xl
+            "
+          />
+        </div>
+
+        <div
+          className="
+            relative z-10
+            px-8 py-10
+            lg:px-12 lg:py-12
+          "
+        >
+
+          <div className="max-w-3xl">
+
+            <motion.div
+              whileHover={{
+                y: -1,
+              }}
               className="
                 inline-flex items-center
                 gap-2 rounded-full
-                bg-neutral-100
+                border border-white/60
+                bg-white/70
                 px-4 py-2
                 text-xs font-medium
                 uppercase tracking-[0.18em]
                 text-neutral-600
+                backdrop-blur-xl
               "
             >
+
+              <Activity className="h-3.5 w-3.5" />
+
               Hanexis Workspace
-            </div>
+            </motion.div>
 
             <h1
               className="
@@ -147,7 +156,7 @@ export default async function DashboardOverview() {
               Manage leads,
               outreach,
               and conversations
-              from one place.
+              intelligently.
             </h1>
 
             <p
@@ -157,12 +166,10 @@ export default async function DashboardOverview() {
                 text-neutral-600
               "
             >
-              Track prospects,
-              organize outreach,
-              generate personalized
-              messages,
-              and monitor pipeline activity
-              across your sales workflow.
+              AI-assisted relationship
+              management for modern
+              outbound workflows and
+              personalized engagement.
             </p>
 
             <div
@@ -172,46 +179,72 @@ export default async function DashboardOverview() {
               "
             >
 
-              <Link
-                href="/dashboard/leads"
-                className="
-                  inline-flex items-center
-                  gap-2 rounded-2xl
-                  bg-neutral-950
-                  px-5 py-3
-                  text-sm font-medium
-                  text-white transition
-                  hover:bg-black
-                "
+              <motion.div
+                whileHover={{
+                  y: -2,
+                }}
+                whileTap={{
+                  scale: 0.98,
+                }}
               >
-                Open Leads
 
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+                <Link
+                  href="/dashboard/leads"
+                  className="
+                    inline-flex items-center
+                    gap-2 rounded-2xl
+                    bg-neutral-950
+                    px-5 py-3
+                    text-sm font-medium
+                    text-white
+                    shadow-lg transition-all
+                    duration-300
+                    hover:shadow-xl
+                  "
+                >
+                  Open Leads
 
-              <Link
-                href="/dashboard/ai-messages"
-                className="
-                  inline-flex items-center
-                  gap-2 rounded-2xl
-                  border border-neutral-200
-                  bg-white px-5 py-3
-                  text-sm font-medium
-                  text-neutral-700
-                  transition
-                  hover:bg-neutral-100
-                "
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </motion.div>
+
+              <motion.div
+                whileHover={{
+                  y: -2,
+                }}
+                whileTap={{
+                  scale: 0.98,
+                }}
               >
-                Generate Outreach
-              </Link>
+
+                <Link
+                  href="/dashboard/ai-messages"
+                  className="
+                    inline-flex items-center
+                    gap-2 rounded-2xl
+                    border border-white/60
+                    bg-white/70
+                    px-5 py-3
+                    text-sm font-medium
+                    text-neutral-700
+                    backdrop-blur-xl
+                    transition-all
+                    duration-300
+                    hover:shadow-lg
+                  "
+                >
+                  Generate Outreach
+                </Link>
+              </motion.div>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Metrics */}
 
-      <section
+      <motion.section
+        variants={item}
         className="
           grid gap-5
           md:grid-cols-3
@@ -222,76 +255,28 @@ export default async function DashboardOverview() {
           title="Total Leads"
           value={totalLeads}
           icon={Users}
-          description="Prospects currently tracked"
+          description="Tracked prospects"
         />
 
         <MetricCard
-          title="Generated Messages"
+          title="AI Outreach"
           value={totalMessages}
           icon={Sparkles}
-          description="Outreach drafts created"
+          description="Generated messages"
         />
 
         <MetricCard
           title="Pipeline Activity"
-          value={
-            byStatus.reduce(
-              (
-                acc,
-                curr
-              ) =>
-                acc +
-                curr._count.status,
-              0
-            )
-          }
+          value={pipelineActivity}
           icon={TrendingUp}
-          description="Tracked status updates"
+          description="Active workflow signals"
         />
-      </section>
-
-      {/* Charts */}
-
-      <section
-        className="
-          rounded-[32px]
-          border border-neutral-200
-          bg-white p-7
-        "
-      >
-        <div>
-
-          <div
-            className="
-              text-sm
-              text-neutral-500
-            "
-          >
-            Overview
-          </div>
-
-          <h2
-            className="
-              mt-1 text-2xl
-              font-semibold
-              tracking-tight
-              text-neutral-950
-            "
-          >
-            Pipeline analytics
-          </h2>
-        </div>
-
-        <div className="mt-8">
-          <DashboardCharts
-            byStatus={byStatus}
-          />
-        </div>
-      </section>
+      </motion.section>
 
       {/* Grid */}
 
-      <section
+      <motion.section
+        variants={item}
         className="
           grid gap-6
           xl:grid-cols-2
@@ -302,9 +287,12 @@ export default async function DashboardOverview() {
 
         <div
           className="
-            rounded-[32px]
-            border border-neutral-200
-            bg-white p-7
+            rounded-[34px]
+            border border-white/50
+            bg-white/70
+            p-7
+            shadow-[0_10px_40px_rgba(15,23,42,0.05)]
+            backdrop-blur-2xl
           "
         >
 
@@ -314,6 +302,7 @@ export default async function DashboardOverview() {
               justify-between
             "
           >
+
             <div>
 
               <div
@@ -340,7 +329,8 @@ export default async function DashboardOverview() {
               href="/dashboard/leads"
               className="
                 text-sm font-medium
-                text-neutral-600
+                text-neutral-500
+                transition
                 hover:text-black
               "
             >
@@ -350,100 +340,86 @@ export default async function DashboardOverview() {
 
           <div className="mt-6 space-y-4">
 
-            {recentLeads.length ===
-            0 ? (
-              <EmptyState
-                title="No leads available"
-                description="Create or import leads to begin tracking outreach."
-                href="/dashboard/leads"
-                action="Open Leads"
-              />
-            ) : (
-              recentLeads.map(
-                (lead) => (
+            {recentLeads.map(
+              (
+                lead,
+                index
+              ) => (
+                <motion.div
+                  key={lead.id}
+                  initial={{
+                    opacity: 0,
+                    y: 10,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    delay:
+                      index * 0.05,
+                  }}
+                  whileHover={{
+                    y: -2,
+                  }}
+                  className="
+                    rounded-[28px]
+                    border border-white/50
+                    bg-white/80
+                    p-5
+                    shadow-sm
+                    backdrop-blur-xl
+                    transition-all
+                    duration-300
+                    hover:shadow-lg
+                  "
+                >
+
                   <div
-                    key={lead.id}
                     className="
-                      rounded-3xl
-                      border border-neutral-200
-                      bg-neutral-50
-                      p-5
+                      flex items-start
+                      justify-between
+                      gap-4
                     "
                   >
 
-                    <div
-                      className="
-                        flex items-start
-                        justify-between
-                        gap-4
-                      "
-                    >
+                    <div>
 
-                      <div>
-
-                        <div
-                          className="
-                            text-base
-                            font-medium
-                            text-neutral-950
-                          "
-                        >
-                          {lead.fullName}
-                        </div>
-
-                        <div
-                          className="
-                            mt-2 text-sm
-                            text-neutral-500
-                          "
-                        >
-                          {[
-                            lead.jobTitle,
-                            lead.company,
-                          ]
-                            .filter(Boolean)
-                            .join(' • ')}
-                        </div>
-
-                        <div
-                          className="
-                            mt-4 flex
-                            flex-wrap gap-2
-                          "
-                        >
-                          {lead.tags
-                            .slice(0, 3)
-                            .map((tag) => (
-                              <span
-                                key={tag.id}
-                                className="
-                                  rounded-full
-                                  border border-neutral-200
-                                  bg-white
-                                  px-3 py-1
-                                  text-xs
-                                  text-neutral-600
-                                "
-                              >
-                                {tag.label}
-                              </span>
-                            ))}
-                        </div>
+                      <div
+                        className="
+                          text-base
+                          font-semibold
+                          text-neutral-950
+                        "
+                      >
+                        {lead.fullName}
                       </div>
 
                       <div
                         className="
-                          text-xs
-                          text-neutral-400
+                          mt-2 text-sm
+                          text-neutral-500
                         "
                       >
-                        {timeAgo(
-                          lead.createdAt
-                        )}
+                        {[
+                          lead.jobTitle,
+                          lead.company,
+                        ]
+                          .filter(Boolean)
+                          .join(' • ')}
                       </div>
                     </div>
+
+                    <div
+                      className="
+                        text-xs
+                        text-neutral-400
+                      "
+                    >
+                      Recent
+                    </div>
                   </div>
-                )
+                </motion.div>
               )
             )}
           </div>
@@ -453,9 +429,12 @@ export default async function DashboardOverview() {
 
         <div
           className="
-            rounded-[32px]
-            border border-neutral-200
-            bg-white p-7
+            rounded-[34px]
+            border border-white/50
+            bg-white/70
+            p-7
+            shadow-[0_10px_40px_rgba(15,23,42,0.05)]
+            backdrop-blur-2xl
           "
         >
 
@@ -465,6 +444,7 @@ export default async function DashboardOverview() {
               justify-between
             "
           >
+
             <div>
 
               <div
@@ -491,7 +471,8 @@ export default async function DashboardOverview() {
               href="/dashboard/ai-messages"
               className="
                 text-sm font-medium
-                text-neutral-600
+                text-neutral-500
+                transition
                 hover:text-black
               "
             >
@@ -501,104 +482,86 @@ export default async function DashboardOverview() {
 
           <div className="mt-6 space-y-4">
 
-            {recentMessages.length ===
-            0 ? (
-              <EmptyState
-                title="No outreach generated"
-                description="Generate personalized messages for your leads."
-                href="/dashboard/ai-messages"
-                action="Open Outreach"
-              />
-            ) : (
-              recentMessages.map(
-                (message) => (
+            {recentMessages.map(
+              (
+                message,
+                index
+              ) => (
+                <motion.div
+                  key={message.id}
+                  initial={{
+                    opacity: 0,
+                    y: 10,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    delay:
+                      index * 0.05,
+                  }}
+                  whileHover={{
+                    y: -2,
+                  }}
+                  className="
+                    rounded-[28px]
+                    border border-white/50
+                    bg-white/80
+                    p-5
+                    shadow-sm
+                    backdrop-blur-xl
+                    transition-all
+                    duration-300
+                    hover:shadow-lg
+                  "
+                >
+
                   <div
-                    key={message.id}
                     className="
-                      rounded-3xl
-                      border border-neutral-200
-                      bg-neutral-50
-                      p-5
+                      flex items-center
+                      justify-between
                     "
                   >
 
-                    <div
+                    <span
                       className="
-                        flex items-center
-                        justify-between
-                      "
-                    >
-
-                      <span
-                        className="
-                          rounded-full
-                          bg-white
-                          px-3 py-1
-                          text-xs
-                          font-medium
-                          text-neutral-700
-                        "
-                      >
-                        {message.kind.replace(
-                          '_',
-                          ' '
-                        )}
-                      </span>
-
-                      <span
-                        className="
-                          text-xs
-                          text-neutral-400
-                        "
-                      >
-                        {timeAgo(
-                          message.createdAt
-                        )}
-                      </span>
-                    </div>
-
-                    <p
-                      className="
-                        mt-4 line-clamp-4
-                        text-sm
-                        leading-7
+                        rounded-full
+                        border border-white/50
+                        bg-white/70
+                        px-3 py-1
+                        text-xs
+                        font-medium
                         text-neutral-700
                       "
                     >
-                      {message.output}
-                    </p>
+                      {message.kind}
+                    </span>
 
-                    {message.lead
-                      ?.fullName && (
-                      <div
-                        className="
-                          mt-4 flex
-                          items-center gap-2
-                          text-xs
-                          text-neutral-500
-                        "
-                      >
-                        <MessageSquare className="h-3 w-3" />
-
-                        {
-                          message
-                            .lead
-                            .fullName
-                        }
-
-                        {message.lead
-                          .company &&
-                          ` • ${message.lead.company}`}
-                      </div>
-                    )}
+                    <MessageSquare
+                      className="
+                        h-4 w-4
+                        text-neutral-400
+                      "
+                    />
                   </div>
-                )
+
+                  <p
+                    className="
+                      mt-4 line-clamp-4
+                      text-sm leading-7
+                      text-neutral-700
+                    "
+                  >
+                    {message.output}
+                  </p>
+                </motion.div>
               )
             )}
           </div>
         </div>
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   );
 }
 
@@ -617,134 +580,94 @@ function MetricCard({
   description: string;
 }) {
   return (
-    <div
+    <motion.div
+      whileHover={{
+        y: -3,
+      }}
       className="
-        rounded-[28px]
-        border border-neutral-200
-        bg-white p-6
+        relative overflow-hidden
+        rounded-[32px]
+        border border-white/50
+        bg-white/70
+        p-6
+        shadow-[0_10px_40px_rgba(15,23,42,0.05)]
+        backdrop-blur-2xl
       "
     >
+
       <div
         className="
-          flex items-start
-          justify-between
+          absolute right-[-30px]
+          top-[-30px]
+          h-32 w-32
+          rounded-full
+          bg-violet-200/10
+          blur-2xl
         "
-      >
+      />
 
-        <div>
-
-          <div
-            className="
-              text-sm
-              text-neutral-500
-            "
-          >
-            {title}
-          </div>
-
-          <div
-            className="
-              mt-4 text-4xl
-              font-semibold
-              tracking-tight
-              text-neutral-950
-            "
-          >
-            {value}
-          </div>
-        </div>
+      <div className="relative z-10">
 
         <div
           className="
-            flex h-12 w-12
-            items-center justify-center
-            rounded-2xl
-            bg-neutral-100
+            flex items-start
+            justify-between
           "
         >
-          <Icon
+
+          <div>
+
+            <div
+              className="
+                text-sm
+                text-neutral-500
+              "
+            >
+              {title}
+            </div>
+
+            <div
+              className="
+                mt-4 text-5xl
+                font-semibold
+                tracking-tight
+                text-neutral-950
+              "
+            >
+              {value}
+            </div>
+          </div>
+
+          <div
             className="
-              h-5 w-5
-              text-neutral-700
+              flex h-12 w-12
+              items-center
+              justify-center
+              rounded-2xl
+              bg-white
+              shadow-sm
             "
-          />
+          >
+
+            <Icon
+              className="
+                h-5 w-5
+                text-neutral-700
+              "
+            />
+          </div>
         </div>
+
+        <p
+          className="
+            mt-5 text-sm
+            leading-7
+            text-neutral-500
+          "
+        >
+          {description}
+        </p>
       </div>
-
-      <p
-        className="
-          mt-5 text-sm
-          leading-6
-          text-neutral-500
-        "
-      >
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function EmptyState({
-  title,
-  description,
-  href,
-  action,
-}: {
-  title: string;
-
-  description: string;
-
-  href: string;
-
-  action: string;
-}) {
-  return (
-    <div
-      className="
-        rounded-[28px]
-        border border-dashed
-        border-neutral-300
-        bg-neutral-50
-        p-8
-      "
-    >
-      <div
-        className="
-          text-base font-medium
-          text-neutral-900
-        "
-      >
-        {title}
-      </div>
-
-      <p
-        className="
-          mt-3 text-sm
-          leading-7
-          text-neutral-500
-        "
-      >
-        {description}
-      </p>
-
-      <Link
-        href={href}
-        className="
-          mt-6 inline-flex
-          items-center gap-2
-          rounded-2xl
-          border border-neutral-200
-          bg-white px-4 py-2
-          text-sm font-medium
-          text-neutral-700
-          transition
-          hover:bg-neutral-100
-        "
-      >
-        {action}
-
-        <ArrowRight className="h-4 w-4" />
-      </Link>
-    </div>
+    </motion.div>
   );
 }

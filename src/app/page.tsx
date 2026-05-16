@@ -240,7 +240,7 @@ export default function LandingPage() {
               "
             />
 
-            Outreach workflow platform
+            
           </div>
 
           <h1

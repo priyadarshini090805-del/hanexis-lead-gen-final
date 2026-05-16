@@ -84,9 +84,11 @@ export function LeadTable({
     <div
       className="
         overflow-hidden
-        rounded-[30px]
-        border border-neutral-200
-        bg-white
+        rounded-[34px]
+        border border-white/50
+        bg-white/70
+        shadow-[0_10px_60px_rgba(15,23,42,0.06)]
+        backdrop-blur-2xl
       "
     >
 
@@ -95,7 +97,7 @@ export function LeadTable({
       <div
         className="
           flex flex-col gap-4
-          border-b border-neutral-200
+          border-b border-neutral-200/70
           px-7 py-6
           sm:flex-row
           sm:items-center
@@ -130,11 +132,14 @@ export function LeadTable({
           className="
             inline-flex items-center
             rounded-full
-            bg-neutral-100
+            border border-white/60
+            bg-white/70
             px-4 py-2
             text-sm
             font-medium
             text-neutral-700
+            shadow-sm
+            backdrop-blur-xl
           "
         >
           {leads.length} total
@@ -152,8 +157,9 @@ export function LeadTable({
             <tr
               className="
                 border-b
-                border-neutral-200
-                bg-neutral-50
+                border-neutral-200/70
+                bg-white/50
+                backdrop-blur-xl
               "
             >
 
@@ -235,16 +241,20 @@ export function LeadTable({
                   key={lead.id}
                   initial={{
                     opacity: 0,
-                    y: 6,
+                    y: 8,
                   }}
                   animate={{
                     opacity: 1,
                     y: 0,
                   }}
+                  whileHover={{
+                    y: -2,
+                  }}
                   transition={{
                     delay:
                       index *
-                      0.025,
+                      0.03,
+                    duration: 0.25,
                   }}
                   onClick={() =>
                     onSelectLead?.(
@@ -254,9 +264,11 @@ export function LeadTable({
                   className="
                     group cursor-pointer
                     border-b
-                    border-neutral-100
-                    transition-colors
-                    hover:bg-neutral-50
+                    border-neutral-100/70
+                    transition-all
+                    duration-300
+                    hover:bg-white/90
+                    hover:shadow-[0_8px_30px_rgba(15,23,42,0.05)]
                   "
                 >
 
@@ -271,23 +283,47 @@ export function LeadTable({
                       "
                     >
 
-                      <div
+                      {/* Avatar */}
+
+                      <motion.div
+                        whileHover={{
+                          scale: 1.05,
+                        }}
                         className="
-                          flex h-11 w-11
+                          relative flex
+                          h-12 w-12
                           shrink-0
                           items-center
                           justify-center
+                          overflow-hidden
                           rounded-2xl
-                          bg-neutral-900
+                          bg-gradient-to-br
+                          from-violet-600
+                          to-neutral-900
                           text-sm
                           font-semibold
                           text-white
+                          shadow-lg
                         "
                       >
-                        {initials(
-                          lead.fullName
-                        )}
-                      </div>
+
+                        <div
+                          className="
+                            absolute inset-0
+                            bg-gradient-to-br
+                            from-white/10
+                            to-transparent
+                          "
+                        />
+
+                        <span className="relative z-10">
+                          {initials(
+                            lead.fullName
+                          )}
+                        </span>
+                      </motion.div>
+
+                      {/* Info */}
 
                       <div
                         className="
@@ -306,7 +342,7 @@ export function LeadTable({
                             className="
                               truncate
                               text-sm
-                              font-medium
+                              font-semibold
                               text-neutral-950
                             "
                           >
@@ -319,7 +355,9 @@ export function LeadTable({
                             className="
                               h-3.5 w-3.5
                               opacity-0
-                              transition
+                              transition-all
+                              duration-300
+                              group-hover:translate-x-0.5
                               group-hover:opacity-100
                             "
                           />
@@ -364,7 +402,10 @@ export function LeadTable({
                           )}
 
                           {lead.linkedinUrl && (
-                            <a
+                            <motion.a
+                              whileHover={{
+                                y: -1,
+                              }}
                               href={
                                 lead.linkedinUrl
                               }
@@ -373,7 +414,7 @@ export function LeadTable({
                               className="
                                 text-neutral-400
                                 transition
-                                hover:text-neutral-900
+                                hover:text-blue-600
                               "
                               onClick={(
                                 e
@@ -382,11 +423,14 @@ export function LeadTable({
                               }
                             >
                               <Linkedin className="h-4 w-4" />
-                            </a>
+                            </motion.a>
                           )}
 
                           {lead.instagramUrl && (
-                            <a
+                            <motion.a
+                              whileHover={{
+                                y: -1,
+                              }}
                               href={
                                 lead.instagramUrl
                               }
@@ -395,7 +439,7 @@ export function LeadTable({
                               className="
                                 text-neutral-400
                                 transition
-                                hover:text-neutral-900
+                                hover:text-pink-600
                               "
                               onClick={(
                                 e
@@ -404,7 +448,7 @@ export function LeadTable({
                               }
                             >
                               <Instagram className="h-4 w-4" />
-                            </a>
+                            </motion.a>
                           )}
                         </div>
                       </div>
@@ -424,11 +468,12 @@ export function LeadTable({
 
                       <div
                         className="
-                          flex h-10 w-10
+                          flex h-11 w-11
                           items-center
                           justify-center
                           rounded-2xl
-                          bg-neutral-100
+                          bg-white
+                          shadow-sm
                         "
                       >
                         <Building2
@@ -478,6 +523,7 @@ export function LeadTable({
                         px-3 py-1.5
                         text-xs
                         font-medium
+                        shadow-sm
                         ${getStatusStyles(
                           lead.status
                         )}
@@ -500,29 +546,41 @@ export function LeadTable({
 
                       <div
                         className="
-                          relative h-2
+                          relative h-2.5
                           w-24 overflow-hidden
                           rounded-full
                           bg-neutral-200
                         "
                       >
 
-                        <div
-                          className="
-                            absolute left-0 top-0
-                            h-full rounded-full
-                            bg-neutral-900
-                          "
-                          style={{
+                        <motion.div
+                          initial={{
+                            width: 0,
+                          }}
+                          animate={{
                             width: `${lead.score}%`,
                           }}
+                          transition={{
+                            duration: 0.7,
+                            delay:
+                              index *
+                              0.04,
+                          }}
+                          className="
+                            absolute left-0
+                            top-0 h-full
+                            rounded-full
+                            bg-gradient-to-r
+                            from-violet-600
+                            to-cyan-500
+                          "
                         />
                       </div>
 
                       <span
                         className="
                           text-sm
-                          font-medium
+                          font-semibold
                           text-neutral-700
                         "
                       >
@@ -547,24 +605,29 @@ export function LeadTable({
                           (
                             tag
                           ) => (
-                            <div
+                            <motion.div
+                              whileHover={{
+                                y: -1,
+                              }}
                               key={
                                 tag.id
                               }
                               className="
                                 rounded-full
                                 border
-                                border-neutral-200
-                                bg-neutral-50
+                                border-white/60
+                                bg-white/80
                                 px-3 py-1
                                 text-xs
                                 text-neutral-600
+                                shadow-sm
+                                backdrop-blur-xl
                               "
                             >
                               {
                                 tag.label
                               }
-                            </div>
+                            </motion.div>
                           )
                         )
                       ) : (
